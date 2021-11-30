@@ -38,12 +38,12 @@ class Image:
     def describe_keypoints(self, r):
         # out: return the List of keypoint descriptors
         size = 2*r + 1
-        self.keypoints_decription = np.zeros((size*size, len(self.keypoints)))
+        self.keypoints_decription = np.zeros((len(self.keypoints), size*size))
         temp_img = np.pad(self.image, [(r, r), (r,r)], mode='constant')
         
         for idx, kpt in enumerate(self.keypoints):
             patch = temp_img[kpt.u:kpt.u + size, kpt.v:kpt.v + size].flatten()
-            self.keypoints_decription[:, idx] = patch
+            self.keypoints_decription[idx,:] = patch
 
         self.keypoints_description = np.array(self.keypoints_decription)
 
