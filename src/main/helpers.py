@@ -34,3 +34,9 @@ class helpers:
             lines = [line.strip(", \n") for line in lines]
             K = np.genfromtxt(lines, dtype = float, delimiter = ", ")
         return K
+    def Point2DListToInt(self, keypoints):
+        """
+        keypoints: List of Point2D objects
+        out: List of [x,y] keypoints in integers
+        """
+        return np.array([[k.u,k.v] for k in keypoints])
