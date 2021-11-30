@@ -1,7 +1,6 @@
 import os
 import cv2
 import numpy as np
-from PIL import Image as PImage
 
 class helpers:
     def __init__(self):
@@ -21,8 +20,8 @@ class helpers:
         loadedImages = []
         for image in imagesList:
             img = cv2.imread(img_dir + image)
-            img = PImage.open(img_dir + image).convert('L')
-            img = np.array(img)
+            img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            img = np.float32(img)
             loadedImages.append(img)
 
         return loadedImages
