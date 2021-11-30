@@ -28,6 +28,9 @@ class Initialization:
         keypoints_match = self.match_keypoints(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
     
     def match_keypoints(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
+        """
+        out: return corresponding matched keypoints between both images [[keypoints 1], [keypoints 2]]
+        """
         # Thought! Maybe match keypoints should be a class or a function in helpers function 
         # since it can be used during localization as well
         # TODO: implement this method
