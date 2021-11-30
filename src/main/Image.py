@@ -36,8 +36,16 @@ class Image:
             temp_scores[max_index[0]-r:max_index[0]+r+1,max_index[1]-r:max_index[1]+r+1] = 0
 
     def describe_keypoints(self, r):
-        # TODO: develop this method
-        self.keypoints_decription = None
+        # out: return the List of keypoint descriptors
+        size = 2*r + 1
+        self.keypoints_decription = np.zeros((size*size, len(self.keypoints)))
+        temp_img = np.pad(self.image, [(r, r), (r,r)], mode='constant')
+        
+        for idx, kpt in enumerate(self.keypoints):
+            patch = temp_img[kpt.u:kpt.u + size, kpt.v:kpt.v + size].flatten()
+            self.keypoints_decription[:, idx] = patch
+
+        self.keypoints_description = np.array(self.keypoints_decription)
 
     def get_keypoints(self):
         return self.keypoints.copy()
