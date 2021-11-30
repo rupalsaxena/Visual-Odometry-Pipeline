@@ -33,14 +33,15 @@ class Initialization:
         # TODO: implement this method
         matches = self.match_descriptors(keypoint_des1, keypoint_des2)
 
-        kpt_matching = []
+        kpt_matching = [[],[]]
         for idx, match in enumerate(matches):
             if(match is None):
                 continue
             kpt1 = keypoints1[idx]
-            ktp2 = keypoints2[match]
+            kpt2 = keypoints2[match]
 
-            kpt_matching.append([kpt1, ktp2])
+            kpt_matching[0].append(kpt1)
+            kpt_matching[1].append(kpt2)
                 
         return kpt_matching
 
