@@ -14,6 +14,7 @@ class Initialization:
         self.K = K
         self.num_iter = num_iter
         self.helpers = helpers() # Get helper functions
+        self.generate_keypoints_correspondences()
         
     def generate_keypoints_correspondences(self):
         img_obj1 = Image(self.image1)
@@ -26,6 +27,8 @@ class Initialization:
         keypoint_des2 = img_obj2.get_keypoints_descriptions()
 
         keypoints_match = self.match_keypoints(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
+        
+        print(cv2.decomposeEssentialMat(self.getEssentialMatrix(keypoints_match)))
     
     def match_keypoints(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
         """
@@ -68,3 +71,18 @@ class Initialization:
                 dist_1[min_match] = MAX_DIST
 
         return matching
+    
+    def getEssentialMatrix(self, kpt_matching):
+        """
+        kpt_matching: keypoints matching between 2 images [[Point2D keypoint 1, Point2D keypoint 2]]
+        """
+
+        kpts1 = self.helpers.Point2DListToInt(kpt_matching[0])
+        kpts2 = self.helpers.Point2DListToInt(kpt_matching[1])
+
+        F, mask = cv2.findFundamentalMat(kpts1, kpts2, cv2.FM_RANSAC)
+
+        return self.K.T @ F @ self.K
+
+
+
