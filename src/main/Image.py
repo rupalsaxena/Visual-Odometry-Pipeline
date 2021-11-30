@@ -23,13 +23,16 @@ class Image:
 
     def select_keypoints(self, num, r):
         # input number of selected keypoints and patch radius
-        self.keypoints = [Point2D(0,0)]*num
-        temp_scores = np.pad(self.harris_score,[(r,r),(r,r)],mode = 'constant')
+        self.keypoints = []
+        temp_scores = np.pad(self.harris_score,[(r,r),(r,r)],mode = 'constant')        
 
         for i in range(num):
             max_index = np.array(np.unravel_index(temp_scores.argmax(), temp_scores.shape))
+            if(temp_scores[max_index[0], max_index[1]]<=0):  
+                # Break if max keypoint's score get to zero or below zero.
+                break
             diff = max_index-r
-            self.keypoints[i] = Point2D(int(diff[0]), int(diff[1]))
+            self.keypoints.append(Point2D(int(diff[0]), int(diff[1])))
             temp_scores[max_index[0]-r:max_index[0]+r+1,max_index[1]-r:max_index[1]+r+1] = 0
 
     def describe_keypoints(self, r):
