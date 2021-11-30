@@ -4,6 +4,8 @@ from scipy.spatial.distance import cdist
 
 from Image import Image
 
+from helpers import helpers
+
 
 class Initialization:
     def __init__(self, img1, img2, K, num_iter=1200):
@@ -11,6 +13,7 @@ class Initialization:
         self.image2 = img2
         self.K = K
         self.num_iter = num_iter
+        self.helpers = helpers() # Get helper functions
         
     def generate_keypoints_correspondences(self):
         img_obj1 = Image(self.image1)
