@@ -26,9 +26,9 @@ class Initialization:
         
         keypoints_correspondence = self.get_keypoints_correspondence(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
 
-        E = self.getEssentialMatrix(keypoints_correspondence)
+        E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)
         R1, R2, T = cv2.decomposeEssentialMat(E)
-        print(T)
+        
 
     def get_keypoints_correspondence(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
         """
@@ -80,4 +80,6 @@ class Initialization:
 
         F, mask = cv2.findFundamentalMat(kpts1, kpts2, cv2.FM_RANSAC)
 
-        return self.K.T @ F @ self.K
+        inliers1 = np.array([[kpts1[i][0], kpts1[i][1]] for i,j in enumerate(mask) if j[0] == 1])
+        inliers2 = np.array([[kpts2[i][0], kpts2[i][1]] for i,j in enumerate(mask) if j[0] == 1])
+        return self.K.T @ F @ self.K, inliers1, inliers2
