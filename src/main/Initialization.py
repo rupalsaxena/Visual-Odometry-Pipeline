@@ -8,15 +8,13 @@ from helpers import helpers
 
 
 class Initialization:
-    def __init__(self, img1, img2, K, num_iter=1200):
+    def __init__(self, img1, img2, K):
         self.image1 = img1
         self.image2 = img2
         self.K = K
-        self.num_iter = num_iter
-        self.helpers = helpers() # Get helper functions
-        self.generate_keypoints_correspondences()
-        
-    def generate_keypoints_correspondences(self):
+        self.helpers = helpers()
+
+    def run(self):
         img_obj1 = Image(self.image1)
         img_obj2 = Image(self.image2)
 
@@ -25,18 +23,17 @@ class Initialization:
 
         keypoint_des1 = img_obj1.get_keypoints_descriptions()
         keypoint_des2 = img_obj2.get_keypoints_descriptions()
-
-        keypoints_match = self.match_keypoints(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
         
-        print(cv2.decomposeEssentialMat(self.getEssentialMatrix(keypoints_match)))
-    
-    def match_keypoints(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
+        keypoints_correspondence = self.get_keypoints_correspondence(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
+
+        E = self.getEssentialMatrix(keypoints_correspondence)
+        R1, R2, T = cv2.decomposeEssentialMat(E)
+        print(T)
+
+    def get_keypoints_correspondence(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
         """
         out: return corresponding matched keypoints between both images [[keypoints 1], [keypoints 2]]
         """
-        # Thought! Maybe match keypoints should be a class or a function in helpers function 
-        # since it can be used during localization as well
-        # TODO: implement this method
         matches = self.match_descriptors(keypoint_des1, keypoint_des2)
 
         kpt_matching = [[],[]]
@@ -48,12 +45,14 @@ class Initialization:
 
             kpt_matching[0].append(kpt1)
             kpt_matching[1].append(kpt2)
-                
+
         return kpt_matching
 
     def match_descriptors(self, keypoint_des1, keypoint_des2):
-        # Match keypoint descriptors using euclidean distance
-        # out: Matching list where matching[i] means keypoint_1[i] matches to keypoint_2[matching[i]] 
+        """
+        Match keypoint descriptors using euclidean distance
+        out: Matching list where matching[i] means keypoint_1[i] matches to keypoint_2[matching[i]]
+        """
         MAX_DIST = 1e2
         done_des2 = set()
         matching = [None]*len(keypoint_des1)
@@ -76,13 +75,9 @@ class Initialization:
         """
         kpt_matching: keypoints matching between 2 images [[Point2D keypoint 1, Point2D keypoint 2]]
         """
-
         kpts1 = self.helpers.Point2DListToInt(kpt_matching[0])
         kpts2 = self.helpers.Point2DListToInt(kpt_matching[1])
 
         F, mask = cv2.findFundamentalMat(kpts1, kpts2, cv2.FM_RANSAC)
 
         return self.K.T @ F @ self.K
-
-
-

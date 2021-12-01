@@ -9,3 +9,4 @@ class Pipeline:
     
     def run(self):
         initialise_vo = Initialization(self.images[0], self.images[5], self.K)
+        initialise_vo.run()
