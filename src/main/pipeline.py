@@ -1,5 +1,6 @@
 from helpers import helpers
 from Initialization import Initialization
+from Continuous import Continuous
 
 class Pipeline:
     def __init__(self, img_dir, K_file):
@@ -10,4 +11,6 @@ class Pipeline:
     def run(self):
         initialise_vo = Initialization(self.images[0], self.images[2], self.K)
         keypoints, landmarks, R, T = initialise_vo.run()
-        print(keypoints, landmarks, R, T)
+        
+        continuous_vo = Continuous(keypoints, landmarks, R, T, self.images)
+        continuous_vo.run()

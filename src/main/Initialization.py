@@ -1,13 +1,11 @@
-from random import triangular
 import cv2
 import numpy as np
+
 from numpy.core.numeric import identity
 from scipy.spatial.distance import cdist
 
 from Image import Image
-
 from helpers import helpers
-
 
 class Initialization:
     def __init__(self, img1, img2, K):
@@ -29,12 +27,14 @@ class Initialization:
         keypoints_correspondence = self.get_keypoints_correspondence(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
 
         E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)   
-
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
-        return inliers2, landmarks, R, T
+        return self.helpers.IntListToPoint2D(inliers2), landmarks, R, T
 
 
     def disambiguateEssential(self, E, inliers1, inliers2):
+        """
+        out: return point3D, R, T
+        """
         R1, R2, T = cv2.decomposeEssentialMat(E) 
         
         points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1, T, inliers1, inliers2)
@@ -60,6 +60,10 @@ class Initialization:
         return point3D, R, T
     
     def triangulate(self, R,t, inliers1, inliers2):
+        """
+        out: return 3D points, sum of relative coordinates of left image if z greater than 0, 
+        sum of relative coordinates of right image if z greater than 0
+        """
         inliers1 = np.vstack((inliers1, np.ones(inliers1.shape[1])))
         inliers2 = np.vstack((inliers2, np.ones(inliers1.shape[1])))
 

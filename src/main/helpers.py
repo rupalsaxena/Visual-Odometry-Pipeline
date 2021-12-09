@@ -2,6 +2,8 @@ import os
 import cv2
 import numpy as np
 
+from Point2D import Point2D
+
 class helpers:
     def __init__(self):
         pass
@@ -41,3 +43,23 @@ class helpers:
         out: List of [x,y] keypoints in integers
         """
         return np.array([[k.u,k.v] for k in keypoints])
+    
+    def IntListToPoint2D(self, keypoints):
+        """
+        keypoints: List of [x,y] keypoints in integers
+        out: List of Point2D objects
+        """
+        return [Point2D(keypoints[0][idx], keypoints[1][idx]) for idx in range(0, len(keypoints[0]))]
+    
+    def describe_keypoints(self, r, image, keypoints):
+        # out: return the List of keypoint descriptors
+        size = 2*r + 1
+        keypoints_decription = np.zeros((len(keypoints), size*size))
+        temp_img = np.pad(image, [(r, r), (r,r)], mode='constant')
+        
+        for idx, kpt in enumerate(keypoints):
+            patch = temp_img[kpt.u:kpt.u + size, kpt.v:kpt.v + size].flatten()
+            keypoints_decription[idx,:] = patch
+
+        keypoints_decription = np.array(keypoints_decription)
+        return keypoints_decription
