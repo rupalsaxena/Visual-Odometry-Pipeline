@@ -8,5 +8,5 @@ class Pipeline:
         self.K = self.h.load_poses(K_file)
     
     def run(self):
-        initialise_vo = Initialization(self.images[0], self.images[5], self.K)
+        initialise_vo = Initialization(self.images[0], self.images[2], self.K)
         initialise_vo.run()
