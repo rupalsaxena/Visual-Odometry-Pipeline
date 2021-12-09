@@ -16,13 +16,19 @@ class Continuous:
         self.images = self.images[3:]
     
     def run(self):
+        img_des1 = self.init_keypoint_des
+        img_keypoints1 = self.init_keypoints
         for image in self.images:
             img_obj = Image(image)
-            img_keypoints = img_obj.get_keypoints()
-            img_des = img_obj.get_keypoints_descriptions()
-            kpts_correspondence = self.get_keypoints_correspondence(self.init_keypoints, img_keypoints, self.init_keypoint_des, img_des)
-            self.init_keypoints = img_keypoints
-            self.init_keypoint_des = img_des
+
+            img_keypoints2 = img_obj.get_keypoints()
+            img_des2 = img_obj.get_keypoints_descriptions()
+
+            kpts_correspondence = self.get_keypoints_correspondence(img_keypoints1, img_keypoints2, img_des1, img_des2)
+
+            img_keypoints1 = img_keypoints2
+            img_des1 = img_des2
+
             print(len(kpts_correspondence[1]))
             
     def get_keypoints_correspondence(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 
 from Point2D import Point2D
+from Point3D import Point3D
 
 class helpers:
     def __init__(self):
@@ -50,6 +51,13 @@ class helpers:
         out: List of Point2D objects
         """
         return [Point2D(keypoints[0][idx], keypoints[1][idx]) for idx in range(0, len(keypoints[0]))]
+    
+    def IntListToPoint3D(self, landmarks):
+         """
+        keypoints: List of [X, Y, Z] landmarks in integers
+        out: List of Point3D objects
+        """
+        return [Point3D(landmarks[0][idx], landmarks[1][idx], landmarks[2][idx]) for idx in range(0, len(landmarks[0]))]
     
     def describe_keypoints(self, r, image, keypoints):
         # out: return the List of keypoint descriptors
