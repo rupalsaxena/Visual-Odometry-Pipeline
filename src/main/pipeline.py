@@ -9,4 +9,5 @@ class Pipeline:
     
     def run(self):
         initialise_vo = Initialization(self.images[0], self.images[2], self.K)
-        initialise_vo.run()
+        keypoints, landmarks, R, T = initialise_vo.run()
+        print(keypoints, landmarks, R, T)

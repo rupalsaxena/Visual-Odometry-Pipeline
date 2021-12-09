@@ -28,25 +28,36 @@ class Initialization:
         
         keypoints_correspondence = self.get_keypoints_correspondence(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
 
-        E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)
-        R1, R2, T = cv2.decomposeEssentialMat(E)      
+        E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)   
 
-        self.disambiguateEssential(E, inliers1, inliers2)  
+        landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
+        return inliers2, landmarks, R, T
 
 
     def disambiguateEssential(self, E, inliers1, inliers2):
         R1, R2, T = cv2.decomposeEssentialMat(E) 
-        # inliers1 = np.vstack((inliers1, np.ones(inliers1.shape[1])))
-        # inliers2 = np.vstack((inliers2, np.ones(inliers1.shape[1])))
+        
+        points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1, T, inliers1, inliers2)
+        points3D_2, sum_left_2, sum_right_2 = self.triangulate(R2, T, inliers1, inliers2)
+        points3D_3, sum_left_3, sum_right_3 = self.triangulate(R1, -T, inliers1, inliers2)
+        points3D_4, sum_left_4, sum_right_4 = self.triangulate(R2, -T, inliers1, inliers2)
 
 
-        # print(R1, R2)
-        self.triangulate(R1, T, inliers1, inliers2)
-        self.triangulate(R2, T, inliers1, inliers2)
-                # print("\n\n")
-        self.triangulate(R1, -T, inliers1, inliers2)
-        self.triangulate(R2, -T, inliers1, inliers2)
+        max_points = 0
+        if sum_left_1 == sum_right_1:
+            point3D, R, T = points3D_1.copy(), R1.copy(), T.copy()
+            max_points = sum_left_1
+        if sum_left_2 == sum_right_2 and sum_left_2 >= max_points:
+            point3D, R, T  = points3D_2.copy(), R2.copy(), T.copy()
+            max_points = sum_left_2
+        if sum_left_3 == sum_right_3 and sum_left_3 >= max_points:
+            point3D, R, T  = points3D_3.copy(), R1.copy(), -T.copy()
+            max_points = sum_left_3
+        if sum_left_4 == sum_right_4 and sum_left_4 >= max_points:
+            point3D, R, T  = points3D_4.copy(), R2.copy(), -T.copy()
+            max_points = sum_left_4
 
+        return point3D, R, T
     
     def triangulate(self, R,t, inliers1, inliers2):
         inliers1 = np.vstack((inliers1, np.ones(inliers1.shape[1])))
