@@ -1,5 +1,7 @@
+from random import triangular
 import cv2
 import numpy as np
+from numpy.core.numeric import identity
 from scipy.spatial.distance import cdist
 
 from Image import Image
@@ -27,8 +29,43 @@ class Initialization:
         keypoints_correspondence = self.get_keypoints_correspondence(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
 
         E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)
-        R1, R2, T = cv2.decomposeEssentialMat(E)
+        R1, R2, T = cv2.decomposeEssentialMat(E)      
+
+        self.disambiguateEssential(E, inliers1, inliers2)  
+
+
+    def disambiguateEssential(self, E, inliers1, inliers2):
+        R1, R2, T = cv2.decomposeEssentialMat(E) 
+        # inliers1 = np.vstack((inliers1, np.ones(inliers1.shape[1])))
+        # inliers2 = np.vstack((inliers2, np.ones(inliers1.shape[1])))
+
+
+        # print(R1, R2)
+        self.triangulate(R1, T, inliers1, inliers2)
+        self.triangulate(R2, T, inliers1, inliers2)
+                # print("\n\n")
+        self.triangulate(R1, -T, inliers1, inliers2)
+        self.triangulate(R2, -T, inliers1, inliers2)
+
+    
+    def triangulate(self, R,t, inliers1, inliers2):
+        inliers1 = np.vstack((inliers1, np.ones(inliers1.shape[1])))
+        inliers2 = np.vstack((inliers2, np.ones(inliers1.shape[1])))
+
+        norm_inliers1 = np.linalg.inv(self.K) @ inliers1
+        norm_inliers2 = np.linalg.inv(self.K) @ inliers2
+
+        identity = cv2.hconcat([np.eye(3), np.zeros((3,1))])
+        M1 = np.concatenate((R, t), axis=1) 
+
+        points3D = cv2.triangulatePoints(identity, M1, norm_inliers1[:2,:], norm_inliers2[:2,:])
+        points3D /= points3D[3]
         
+        relative_p1 = identity @ points3D
+        relative_p2 = M1 @  points3D
+
+        return (points3D, sum(relative_p1[2]>0), sum(relative_p2[2]>0))
+
 
     def get_keypoints_correspondence(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
         """
@@ -80,6 +117,6 @@ class Initialization:
 
         F, mask = cv2.findFundamentalMat(kpts1, kpts2, cv2.FM_RANSAC)
 
-        inliers1 = np.array([[kpts1[i][0], kpts1[i][1]] for i,j in enumerate(mask) if j[0] == 1])
-        inliers2 = np.array([[kpts2[i][0], kpts2[i][1]] for i,j in enumerate(mask) if j[0] == 1])
+        inliers1 = np.array([[kpts1[i][0], kpts1[i][1]] for i,j in enumerate(mask) if j[0] == 1]).T
+        inliers2 = np.array([[kpts2[i][0], kpts2[i][1]] for i,j in enumerate(mask) if j[0] == 1]).T
         return self.K.T @ F @ self.K, inliers1, inliers2
