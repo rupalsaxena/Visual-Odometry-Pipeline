@@ -17,8 +17,8 @@ class Continuous:
         self.lk_params = dict( winSize  = (15,15), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
     
     def run(self):
-        T_X = []
-        T_Y = []
+        T_X = [self.init_T[0][0]]
+        T_Y = [self.init_T[1][0]]
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
         good_img_landmarks1 = self.init_landmarks
@@ -44,7 +44,6 @@ class Continuous:
                 T_X.append(tvec[0])
                 T_Y.append(tvec[1])
                 #R, _ = cv2.Rodrigues(rvec)
-            
 
             p0 = good_img_keypoints2.reshape(-1,1,2)
         
