@@ -12,5 +12,5 @@ class Pipeline:
         initialise_vo = Initialization(self.images[0], self.images[2], self.K)
         keypoints, landmarks, R, T = initialise_vo.run()
         
-        continuous_vo = Continuous(keypoints, landmarks, R, T, self.images)
+        continuous_vo = Continuous(keypoints, landmarks, R, T, self.images, self.K)
         continuous_vo.run()

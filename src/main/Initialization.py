@@ -28,7 +28,7 @@ class Initialization:
 
         E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)   
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
-        return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListToPoint3D(landmarks), R, T
+        return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), R, T
 
 
     def disambiguateEssential(self, E, inliers1, inliers2):

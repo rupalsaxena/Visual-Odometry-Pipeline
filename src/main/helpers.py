@@ -16,7 +16,7 @@ class helpers:
         
         index = 0
         for file in sorted(os.listdir(img_dir)):
-            if file.endswith(valid_images) &(index <100000):
+            if file.endswith(valid_images) &(index <30):
                 imagesList.append(file)    
                 index +=1
                 
@@ -58,6 +58,15 @@ class helpers:
         out: List of Point3D objects
         """
         return [Point3D(landmarks[0][idx], landmarks[1][idx], landmarks[2][idx]) for idx in range(0, len(landmarks[0]))]
+
+    def IntListto3D(self, landmarks):
+        """
+        in: List of int landmarks
+        out: list of [X, Y, Z] landmarks
+        """
+        landmarks = landmarks[:3]
+        new_landmarks = [[landmarks[0][i], landmarks[1][i], landmarks[2][i]] for i in range(len(landmarks[0]))]
+        return np.array(new_landmarks)
     
     def describe_keypoints(self, r, image, keypoints):
         # out: return the List of keypoint descriptors
