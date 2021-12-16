@@ -16,7 +16,7 @@ class helpers:
         
         index = 0
         for file in sorted(os.listdir(img_dir)):
-            if file.endswith(valid_images) &(index <10):
+            if file.endswith(valid_images) &(index <100000):
                 imagesList.append(file)    
                 index +=1
                 
@@ -53,7 +53,7 @@ class helpers:
         return [Point2D(keypoints[0][idx], keypoints[1][idx]) for idx in range(0, len(keypoints[0]))]
     
     def IntListToPoint3D(self, landmarks):
-         """
+        """
         keypoints: List of [X, Y, Z] landmarks in integers
         out: List of Point3D objects
         """
