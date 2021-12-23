@@ -18,18 +18,34 @@ class Initialization:
         img_obj1 = Image(self.image1)
         img_obj2 = Image(self.image2)
 
-        keypoints1 = img_obj1.get_keypoints()
-        keypoints2 = img_obj2.get_keypoints()
+        kpts1, kpts2 = self.klt_matching(self.image1, self.image2)
 
-        keypoint_des1 = img_obj1.get_keypoints_descriptions()
-        keypoint_des2 = img_obj2.get_keypoints_descriptions()
-        
-        keypoints_correspondence = self.get_keypoints_correspondence(keypoints1, keypoints2, keypoint_des1, keypoint_des2)
-
-        E, inliers1, inliers2 = self.getEssentialMatrix(keypoints_correspondence)   
+        E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
         return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), R, T
 
+
+    def klt_matching(self, image1, image2):
+        image1 = np.uint8(image1)
+        image2 = np.uint8(image2)
+        # params for ShiTomasi corner detection
+        feature_params = dict( maxCorners = 1000,
+                            qualityLevel = 0.3,
+                            minDistance = 7,
+                            blockSize = 7 )
+        # Parameters for lucas kanade optical flow
+        lk_params = dict( winSize  = (49,49),
+                  maxLevel = 7,
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+        p0 = cv2.goodFeaturesToTrack(image1, mask = None, **feature_params)
+
+        p1, st, err = cv2.calcOpticalFlowPyrLK(image1, image2, p0, None, **lk_params)
+        # Select good points
+        if p1 is not None:
+            good_new = p1[st==1]
+            good_old = p0[st==1]
+        return good_old, good_new
 
     def disambiguateEssential(self, E, inliers1, inliers2):
         """
@@ -123,15 +139,13 @@ class Initialization:
 
         return matching
     
-    def getEssentialMatrix(self, kpt_matching):
+    def getEssentialMatrix(self, kpts1, kpts2):
         """
         kpt_matching: keypoints matching between 2 images [[Point2D keypoint 1, Point2D keypoint 2]]
         """
-        kpts1 = self.helpers.Point2DListToInt(kpt_matching[0])
-        kpts2 = self.helpers.Point2DListToInt(kpt_matching[1])
-
         F, mask = cv2.findFundamentalMat(kpts1, kpts2, cv2.FM_RANSAC)
 
         inliers1 = np.array([[kpts1[i][0], kpts1[i][1]] for i,j in enumerate(mask) if j[0] == 1]).T
         inliers2 = np.array([[kpts2[i][0], kpts2[i][1]] for i,j in enumerate(mask) if j[0] == 1]).T
+        
         return self.K.T @ F @ self.K, inliers1, inliers2
