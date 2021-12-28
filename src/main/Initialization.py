@@ -29,8 +29,8 @@ class Initialization:
         image1 = np.uint8(image1)
         image2 = np.uint8(image2)
         # params for ShiTomasi corner detection
-        feature_params = dict( maxCorners = 1000,
-                            qualityLevel = 0.3,
+        feature_params = dict( maxCorners = 500,
+                            qualityLevel = 0.01,
                             minDistance = 7,
                             blockSize = 7 )
         # Parameters for lucas kanade optical flow
@@ -96,48 +96,6 @@ class Initialization:
         relative_p2 = M1 @  points3D
 
         return (points3D, sum(relative_p1[2]>0), sum(relative_p2[2]>0))
-
-
-    def get_keypoints_correspondence(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
-        """
-        out: return corresponding matched keypoints between both images [[keypoints 1], [keypoints 2]]
-        """
-        matches = self.match_descriptors(keypoint_des1, keypoint_des2)
-
-        kpt_matching = [[],[]]
-        for idx, match in enumerate(matches):
-            if(match is None):
-                continue
-            kpt1 = keypoints1[idx]
-            kpt2 = keypoints2[match]
-
-            kpt_matching[0].append(kpt1)
-            kpt_matching[1].append(kpt2)
-
-        return kpt_matching
-
-    def match_descriptors(self, keypoint_des1, keypoint_des2):
-        """
-        Match keypoint descriptors using euclidean distance
-        out: Matching list where matching[i] means keypoint_1[i] matches to keypoint_2[matching[i]]
-        """
-        MAX_DIST = 1e2
-        done_des2 = set()
-        matching = [None]*len(keypoint_des1)
-        dist = cdist( keypoint_des1, keypoint_des2, metric="euclidean")
-
-        for idx, dist_1 in enumerate(dist):
-            while(True):
-                min_match = np.argmin(dist_1)
-                if(dist_1[min_match]==MAX_DIST):
-                    break
-                elif(min_match not in done_des2):
-                    done_des2.add(min_match)
-                    matching[idx] = min_match
-                    break
-                dist_1[min_match] = MAX_DIST
-
-        return matching
     
     def getEssentialMatrix(self, kpts1, kpts2):
         """
