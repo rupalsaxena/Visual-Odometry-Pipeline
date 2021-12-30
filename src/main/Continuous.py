@@ -19,7 +19,7 @@ class Continuous:
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
     
     def run(self):
-        T_X = [self.init_T[2][0]]
+        T_X = [self.init_T[0][0]]
         T_Y = [self.init_T[1][0]]
         # T_Y = []
         p0 = self.h.Point2DListToInt(self.init_keypoints)
@@ -46,15 +46,18 @@ class Continuous:
                 # good_img_landmarks1 = good_img_landmarks1.reshape(-1,2)
                 # good_img_landmarks1 = good_img_landmarks1[st==1]
             print(len(good_img_keypoints2), len(good_img_landmarks1))
-            if len(good_img_keypoints2) > 20:
+            if len(good_img_keypoints2) > 4:
                 kpts_obj = self.h.kpts2kpts2Object(good_img_keypoints2)
                 output_image = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), kpts_obj, 0, (0,255,0))
                 cv2.imshow('out', output_image)
                 cv2.waitKey(100)
-                retval, rvec, tvec, inliers = cv2.solvePnPRansac(good_img_landmarks1, good_img_keypoints2, self.K, None, flags=cv2.SOLVEPNP_P3P, confidence=0.99)
+                retval, rvec, tvec, inliers = cv2.solvePnPRansac(good_img_landmarks1, good_img_keypoints2, self.K, None, flags=cv2.SOLVEPNP_P3P, confidence=0.9999)
+                inliers = np.squeeze(np.array(inliers))
+                good_img_keypoints2 = good_img_keypoints2[inliers,:]
+                good_img_landmarks1 = good_img_landmarks1[inliers,:]
                 T_X.append(tvec[0])
                 T_Y.append(tvec[1])
-                #R, _ = cv2.Rodrigues(rvec)
+                R, _ = cv2.Rodrigues(rvec)
 
             p0 = good_img_keypoints2.reshape(-1,1,2)
         

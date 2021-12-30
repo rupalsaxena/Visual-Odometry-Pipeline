@@ -29,10 +29,10 @@ class Initialization:
         image1 = np.uint8(image1)
         image2 = np.uint8(image2)
         # params for ShiTomasi corner detection
-        feature_params = dict( maxCorners = 500,
+        feature_params = dict( maxCorners = 1000,
                             qualityLevel = 0.01,
-                            minDistance = 7,
-                            blockSize = 7 )
+                            minDistance = 1,
+                            blockSize = 3 )
         # Parameters for lucas kanade optical flow
         lk_params = dict( winSize  = (49,49),
                   maxLevel = 7,
