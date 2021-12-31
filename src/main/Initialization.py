@@ -15,13 +15,10 @@ class Initialization:
         self.helpers = helpers()
 
     def run(self):
-        img_obj1 = Image(self.image1)
-        img_obj2 = Image(self.image2)
-
         kpts1, kpts2 = self.klt_matching(self.image1, self.image2)
-
         E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
+
         return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), R, T
 
 
@@ -31,8 +28,8 @@ class Initialization:
         # params for ShiTomasi corner detection
         feature_params = dict( maxCorners = 1000,
                             qualityLevel = 0.01,
-                            minDistance = 1,
-                            blockSize = 3 )
+                            minDistance = 7,
+                            blockSize = 7 )
         # Parameters for lucas kanade optical flow
         lk_params = dict( winSize  = (49,49),
                   maxLevel = 7,
