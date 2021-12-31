@@ -56,19 +56,10 @@ class Continuous:
                 T_X.append(tvec[0])
                 T_Y.append(tvec[1])
 
-                R, _ = cv2.Rodrigues(rvec)
-
-                # kpts_obj = self.h.kpts2kpts2Object(good_img_keypoints2)
-                # output_image = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), kpts_obj, 0, (0,255,0))
-
-                # cv2.imshow('out', output_image)
-                # cv2.waitKey(100)
-
-            p0 = good_img_keypoints2.reshape(-1,1,2)
-
+                #R, _ = cv2.Rodrigues(rvec)
             # logic to add candidate keypoints
             
-            # params for shiTomasi corner detection
+            # First: calculate new keypoints using ShiTomasi
             feature_params = dict(maxCorners = 1000,
                             qualityLevel = 0.01,
                             minDistance = 7,
@@ -77,7 +68,7 @@ class Continuous:
             img_kpts = cv2.goodFeaturesToTrack(self.images[i], mask = None, **feature_params)
             img_kpts = np.squeeze(img_kpts)
 
-            # img_kpts which are far away from good_img_keypoints2 are possible new_candidate kpts
+            # Second: img_kpts which are far away from good_img_keypoints2 are possible candidates kpts
             k = 0
             for idx in range(img_kpts.shape[0]):
                 a = img_kpts[idx,:]
@@ -102,22 +93,40 @@ class Continuous:
             if i == 3:
                 candidate_kpts = new_candidate
                 rvec_candidate = np.zeros([new_candidate.shape[0],3])
+                tvec_candidate = np.zeros([new_candidate.shape[0],3])
                 for j in range(new_candidate.shape[0]):
                     rvec_candidate[j,:] = rvec.T
+                    tvec_candidate[j,:] = tvec.T
+
+                fir_obs_C = candidate_kpts
                 
             else:
-                good_candidate_kpts, st, _ = cv2.calcOpticalFlowPyrLK(self.images[i-1], self.images[i], candidate_kpts, None, **self.lk_params)
+                # Third: candidate_kpts is good if it is tracked in next frame
+                good_candidate_kpts, st, _ = cv2.calcOpticalFlowPyrLK(
+                    self.images[i-1], self.images[i], candidate_kpts, None, **self.lk_params
+                )
 
                 if good_candidate_kpts is not None:
                     good_candidate_kpts = good_candidate_kpts[st==1]
 
-                    temp_lst= []
+                    # get rvec_candidate and fir_obs_C based on succesful tracking of candidate kpts
+                    temp_rvec= []
+                    temp_tvec = []
+                    temp_fir_obs_C = []
+
                     for index, value in enumerate(st):
                         if(value==1):
-                            temp_lst.append(rvec_candidate[index])
-                    rvec_candidate = np.array(temp_lst)
-                            
-                "select new_candidate that is far from candidate_kpts"
+                            temp_rvec.append(rvec_candidate[index])
+                            temp_tvec.append(tvec_candidate[index])
+                            temp_fir_obs_C.append(fir_obs_C[index])
+
+
+                    rvec_candidate = np.array(temp_rvec)
+                    tvec_candidate = np.array(temp_tvec)
+                    fir_obs_C = temp_fir_obs_C
+
+                # Fourth: Find completely new candidate kpts which are never found is previous frames
+                # So new_candidate kpts which are far from good_candidate_kpts are completely new candidate kpts.
                 k = 0
                 for idx in range(new_candidate.shape[0]):
                     a = new_candidate[idx,:]
@@ -135,18 +144,22 @@ class Continuous:
                         else:
                             selected_new_candidate = np.vstack([selected_new_candidate,a])
                         k = k+1
-    
-                "append selected new candidate to a final candidate array"
-                candidate = np.vstack([good_candidate_kpts,selected_new_candidate])
-            
+                
+                # getting rvec and tvec of completely new candidates keypoints
                 new_candidate_rvec = np.zeros([selected_new_candidate.shape[0],3])
+                new_candidate_tvec = np.zeros([selected_new_candidate.shape[0],3])
                 for l in range(selected_new_candidate.shape[0]):
                     new_candidate_rvec[l,:] = rvec.T
-            
-                rvec_candidate = np.vstack([rvec_candidate,new_candidate_rvec])
-                candidate_kpts = candidate
+                    new_candidate_tvec[l,:] = tvec.T
 
-            # plot candidate keypoints 
+                #Fifth: stacking old with newly created keypoints
+                candidate_kpts = np.vstack([good_candidate_kpts,selected_new_candidate]) # C as per problem statement
+                fir_obs_C = np.vstack([fir_obs_C, selected_new_candidate]) # F as per problem statement
+                rvec_candidate = np.vstack([rvec_candidate,new_candidate_rvec]) # T as per problem statement (but only rotation)
+                tvec_candidate = np.vstack([tvec_candidate, new_candidate_tvec]) # T as per problem statement (but only translation)
+            p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
+
+            # plots candidate keypoints on left side and good keypoints in right side
             candidate_kpts_obj = self.h.kpts2kpts2Object(candidate_kpts)
             output_image1 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), candidate_kpts_obj, 0, (0,255,255))
 
@@ -155,7 +168,7 @@ class Continuous:
 
             horizontal_concat = np.concatenate((output_image1, output_image2), axis=1)
             cv2.imshow('left_candidate right_initialized', horizontal_concat)
-            cv2.waitKey(100)
+            cv2.waitKey(1)
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
 
         self.h.generate_trajectory(list(zip(T_X, T_Y)))
