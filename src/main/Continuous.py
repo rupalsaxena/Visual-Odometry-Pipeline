@@ -214,7 +214,7 @@ class Continuous:
                     angles[l] = abs(math.acos(temp))
                     
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
-                threshold = 10/180*np.pi
+                threshold = 8/180*np.pi
                 index = np.where(angles >= threshold)
                 
                 added = 0
