@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # # Dataset files
-# data/
+data/
 
 # vscode
 .vscode/
