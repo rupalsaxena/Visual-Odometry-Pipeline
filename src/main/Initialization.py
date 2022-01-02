@@ -19,6 +19,9 @@ class Initialization:
         E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
 
+        R = R.T
+        T = -R @ T
+
         return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), R, T
 
 
