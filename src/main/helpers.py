@@ -20,7 +20,7 @@ class helpers:
         
         index = 0
         for file in sorted(os.listdir(img_dir)):
-            if file.endswith(valid_images) and (index <50):
+            if file.endswith(valid_images) and (index <100):
                 imagesList.append(file)    
             index +=1
 
@@ -28,6 +28,7 @@ class helpers:
         for image in imagesList:
             img = cv2.imread(img_dir + image)
             img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            img = cv2.resize(img, (600, int(img.shape[1]*400.0/img.shape[0])) )
             img = np.float32(img)
             loadedImages.append(img)
 
@@ -93,8 +94,8 @@ class helpers:
         ln, = plt.plot([], [], 'ro')
 
         def init():
-            ax.set_xlim(-10, 10)
-            ax.set_ylim(-10, 10)
+            ax.set_xlim(-25, 25)
+            ax.set_ylim(-25, 25)
             return ln,
 
         def update(points):
