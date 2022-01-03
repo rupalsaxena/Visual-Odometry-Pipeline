@@ -8,9 +8,8 @@ from helpers import helpers
 
 
 class Continuous:
-    def __init__(self, keypoints, landmarks, R, T, images, K):
+    def __init__(self, keypoints, landmarks, T, images, K):
         self.h = helpers()
-        #self.init_R = R
         self.init_T = T
         self.K = K
         self.init_keypoints = keypoints
@@ -57,19 +56,16 @@ class Continuous:
                 good_img_keypoints_temp = good_img_keypoints2
                 good_img_keypoints2 = good_img_keypoints2[inliers,:]
                 good_img_landmarks1 = good_img_landmarks1[inliers,:]
-
                 
                 # inverse tvec and rvec
                 R,_ = cv2.Rodrigues(rvec)
                 R = R.T
-                rvec,_ = cv2.Rodrigues(R)             
+                rvec,_ = cv2.Rodrigues(R)        
                 tvec = -R @ tvec
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
-            
-
-                #R, _ = cv2.Rodrigues(rvec)
+        
             # logic to add candidate keypoints
             
             # First: calculate new keypoints using ShiTomasi
@@ -115,10 +111,7 @@ class Continuous:
                 fir_obs_C = candidate_kpts
                 
             elif(candidate_kpts.shape[0]>0):
-                # print(candidate_kpts)
-                # candidate_kpts = candidate_kpts.astype('float32')
                 # Third: candidate_kpts is good if it is tracked in next frame
-                            
                 good_candidate_kpts, st, _ = cv2.calcOpticalFlowPyrLK(
                     self.images[i-1], self.images[i], candidate_kpts, None, **self.lk_params
                 )
@@ -150,7 +143,7 @@ class Continuous:
                 for idx in range(new_candidate.shape[0]):
                     if(len(new_candidate.shape)!=2):
                         break
-                    print(new_candidate.shape)
+
                     a = new_candidate[idx,:]
                     min_norm = 10000000
                     for j in range(candidate_kpts.shape[0]):
@@ -214,10 +207,8 @@ class Continuous:
                     angles[l] = abs(math.acos(temp))
                     
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
-                threshold = 8/180*np.pi
+                threshold = 1/180*np.pi
                 index = np.where(angles >= threshold)
-                
-                added = 0
                 
                 for l in range(min(index[0].shape[0],300)):
                     
@@ -235,7 +226,6 @@ class Continuous:
                     M1 = np.concatenate((R_first.T,t1), axis = 1)
                     M2 = np.concatenate((R_now.T,t2), axis = 1)   
 
-       
                     inliers1 = np.array(fir_obs_C[idx,:])[None]
                     inliers2 = np.array(candidate_kpts[idx,:])[None]            
                   
@@ -254,11 +244,7 @@ class Continuous:
 
                         # Remove duplicate keypoints
                         good_img_keypoints2, indexes = np.unique(good_img_keypoints2, axis=0, return_index=True)
-                        good_img_landmarks1 = good_img_landmarks1[indexes]
-                        added = added+1
-                    
-                    
-
+                        good_img_landmarks1 = good_img_landmarks1[indexes] # X as per problem statement
                 
             p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
 

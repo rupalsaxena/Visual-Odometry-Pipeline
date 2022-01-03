@@ -20,7 +20,7 @@ class helpers:
         
         index = 0
         for file in sorted(os.listdir(img_dir)):
-            if file.endswith(valid_images) and (index <100):
+            if file.endswith(valid_images) and (index <300):
                 imagesList.append(file)    
             index +=1
 
@@ -94,13 +94,13 @@ class helpers:
         ln, = plt.plot([], [], 'ro')
 
         def init():
-            ax.set_xlim(-25, 25)
-            ax.set_ylim(-25, 25)
+            ax.set_xlim(-100, 100)
+            ax.set_ylim(0, 200)
             return ln,
 
         def update(points):
             xdata.append(points[0])
-            ydata.append(-points[1])
+            ydata.append(points[1])
             ln.set_data(xdata, ydata)
             return ln,
 

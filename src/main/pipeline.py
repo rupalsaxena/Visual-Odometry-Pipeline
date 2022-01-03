@@ -10,7 +10,7 @@ class Pipeline:
     
     def run(self):
         initialise_vo = Initialization(self.images[0], self.images[2], self.K)
-        keypoints, landmarks, R, T = initialise_vo.run()
+        keypoints, landmarks, T = initialise_vo.run()
         
-        continuous_vo = Continuous(keypoints, landmarks, R, T, self.images, self.K)
+        continuous_vo = Continuous(keypoints, landmarks, T, self.images, self.K)
         continuous_vo.run()
