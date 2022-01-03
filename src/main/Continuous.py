@@ -265,7 +265,7 @@ class Continuous:
             cv2.waitKey(1)
             plt.pause(0.05)
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
-            
+        plt.show()
         plt.plot(T_X,T_Y)
         plt.show()
 
