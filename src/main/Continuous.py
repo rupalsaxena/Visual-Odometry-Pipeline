@@ -24,12 +24,14 @@ class Continuous:
     def run(self):
         T_X = [self.init_T[0][0]]
         T_Y = [self.init_T[2][0]]
-
+        plt.xlim((-50,50))
+        plt.ylim((-50,50))
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
         good_img_landmarks1 = self.init_landmarks
 
         for i in range(0, len(self.images)):
+            print(i)
             # i less than equal to 2 is hard coded at the moment. If there is any change in 
             # choosing image frames for initialization, this has to change as well.
             if i<=2:
@@ -207,7 +209,7 @@ class Continuous:
                     angles[l] = abs(math.acos(temp))
                     
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
-                threshold = 1/180*np.pi
+                threshold = 5/180*np.pi
                 index = np.where(angles >= threshold)
                 
                 for l in range(min(index[0].shape[0],300)):
@@ -258,7 +260,10 @@ class Continuous:
 
             horizontal_concat = np.concatenate((output_image1, output_image2), axis=1)
             cv2.imshow('left_candidate right_initialized', horizontal_concat)
+            plt.scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1)
+            # plt.show()
             cv2.waitKey(1)
+            plt.pause(0.05)
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
             
         plt.plot(T_X,T_Y)
