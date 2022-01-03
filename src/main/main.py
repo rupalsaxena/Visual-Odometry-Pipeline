@@ -3,11 +3,11 @@ import time
 from pipeline import Pipeline
 
 
-# IMAGE_PATH = "data/parking/images/"
-# K_PATH = "data/parking/K.txt"
+IMAGE_PATH = "data/parking/images/"
+K_PATH = "data/parking/K.txt"
 
-IMAGE_PATH = 'data/malaga-urban-dataset-extract-07/left_800x600/'
-K_PATH = 'data/malaga-urban-dataset-extract-07/k_800x600_left.txt'
+# IMAGE_PATH = 'data/malaga-urban-dataset-extract-07/left_800x600/'
+# K_PATH = 'data/malaga-urban-dataset-extract-07/k_800x600_left.txt'
 
 def main():
     start_time = time.time()

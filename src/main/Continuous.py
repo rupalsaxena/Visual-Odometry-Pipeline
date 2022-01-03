@@ -30,8 +30,7 @@ class Continuous:
         p0 = np.float32(p0.reshape(-1, 1, 2))
         good_img_landmarks1 = self.init_landmarks
 
-        for i in range(0, len(self.images)):
-            print(i)
+        for i in range(0, min(len(self.images),5000)):
             # i less than equal to 2 is hard coded at the moment. If there is any change in 
             # choosing image frames for initialization, this has to change as well.
             if i<=2:
@@ -64,6 +63,9 @@ class Continuous:
                 R = R.T
                 rvec,_ = cv2.Rodrigues(R)        
                 tvec = -R @ tvec
+                
+                print(i)
+                print(tvec)
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
@@ -94,7 +96,7 @@ class Continuous:
                         min_norm = norm
 
                 # this norm can be tuned
-                if min_norm > 30:
+                if min_norm > 10:
                     if k == 0:
                         new_candidate = a
                     else:
@@ -157,12 +159,13 @@ class Continuous:
                             
                     # this norm can be tuned too
 
-                    if min_norm > 30:
+                    if min_norm > 10:
                         if k == 0:
                             selected_new_candidate = a
                         else:
                             selected_new_candidate = np.vstack([selected_new_candidate,a])
                         k = k+1
+                
                 
                 # getting rvec and tvec of completely new candidates keypoints
                 new_candidate_rvec = np.zeros([selected_new_candidate.shape[0],3])
@@ -176,12 +179,49 @@ class Continuous:
                 fir_obs_C = np.vstack([fir_obs_C, selected_new_candidate]) # F as per problem statement
                 rvec_candidate = np.vstack([rvec_candidate,new_candidate_rvec]) # T as per problem statement (but only rotation)
                 tvec_candidate = np.vstack([tvec_candidate, new_candidate_tvec]) # T as per problem statement (but only translation)
+                
+                
+                temp_rvec= []
+                temp_tvec = []
+                temp_fir_obs_C = []
+                temp_candidate_kpts = []
+                
+                for idx in range(candidate_kpts.shape[0]):
+                    if(len(candidate_kpts.shape)!=2):
+                        break
+                    
+                    a = candidate_kpts[idx,:]
+                    min_norm1 = 100000000
+                    min_norm2 = 100000000
+                    
+                    for j in range(candidate_kpts.shape[0]):
+                        b = candidate_kpts[j,:]
+                        norm = np.linalg.norm(a-b)
+                        if (min_norm1 > norm) &(j!=idx):
+                            min_norm1 = norm
+                            
+                    for j in range(good_img_keypoints2.shape[0]):
+                        b = good_img_keypoints2[j,:]
+                        norm = np.linalg.norm(a-b)
+                        if min_norm2 > norm:
+                            min_norm2= norm
+                            
+                    min_norm = max(min_norm1,min_norm2)
+                    
+                    if min_norm > 20:
+                            temp_rvec.append(rvec_candidate[idx])
+                            temp_tvec.append(tvec_candidate[idx])
+                            temp_fir_obs_C.append(fir_obs_C[idx])
+                            temp_candidate_kpts.append(candidate_kpts[idx])
 
-                # Remove duplicate candidates
-                candidate_kpts, indexes = np.unique(candidate_kpts, axis=0, return_index=True)
-                fir_obs_C = fir_obs_C[indexes]
-                rvec_candidate = rvec_candidate[indexes]
-                tvec_candidate = tvec_candidate[indexes]
+                candidate_kpts = np.array(temp_candidate_kpts)
+                rvec_candidate = np.array(temp_rvec)
+                tvec_candidate = np.array(temp_tvec)
+                fir_obs_C = np.array(temp_fir_obs_C)
+                    
+                    
+                
+                
                 
                 # get bearing angle b/w candidates
                 angles = np.zeros([candidate_kpts.shape[0],1]).astype('float32')
@@ -209,10 +249,10 @@ class Continuous:
                     angles[l] = abs(math.acos(temp))
                     
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
-                threshold = 5/180*np.pi
+                threshold = 1/180*np.pi
                 index = np.where(angles >= threshold)
                 
-                for l in range(min(index[0].shape[0],300)):
+                for l in range(min(index[0].shape[0],200)):
                     
                     # This step is triangulation of new landmark from candidate
                     idx = index[0][l]
@@ -240,14 +280,50 @@ class Continuous:
                     points3D = cv2.triangulatePoints(M1, M2, norm_inliers1[:2,:], norm_inliers2[:2,:])
                     points3D /= points3D[3]
                     
-                    if (points3D[2] > 0 ):    
+                    # t_cam is points3d in view of the camera frame (0,0,0 at camera)
+                    
+                    t_cam = R_first.T @ points3D[0:3] - R_first.T @ t_first
+
+                    
+                    if (t_cam[2] > 0 ):    
                         good_img_keypoints2 = np.vstack([good_img_keypoints2,candidate_kpts[idx,:]])
                         good_img_landmarks1 = np.vstack([good_img_landmarks1,(points3D[0:3]).T]) 
+                          
+                candidate_kpts = np.delete(candidate_kpts,index[0],axis = 0)
+                rvec_candidate = np.delete(rvec_candidate,index[0],axis = 0)
+                tvec_candidate = np.delete(tvec_candidate,index[0],axis = 0)
+                fir_obs_C = np.delete(fir_obs_C,index[0],axis =0)
 
-                        # Remove duplicate keypoints
-                        good_img_keypoints2, indexes = np.unique(good_img_keypoints2, axis=0, return_index=True)
-                        good_img_landmarks1 = good_img_landmarks1[indexes] # X as per problem statement
+                # Remove duplicate keypoints
                 
+                
+                temp_good_img_keypoints2 = []
+                temp_good_img_landmarks1 = []
+                for idx in range(good_img_keypoints2.shape[0]):
+                    if(len(good_img_keypoints2.shape)!=2):
+                        break
+                    
+                    a = good_img_keypoints2[idx,:]
+                    min_norm = 100000000
+                    
+                    for j in range(good_img_keypoints2.shape[0]):
+                        b = good_img_keypoints2[j,:]
+                        norm = np.linalg.norm(a-b)
+                        if (min_norm > norm) &(j!=idx):
+                            min_norm = norm
+                    
+                    if min_norm > 3:
+                        temp_good_img_keypoints2.append(good_img_keypoints2[idx])
+                        temp_good_img_landmarks1.append(good_img_landmarks1[idx])
+
+                good_img_keypoints2 = np.array(temp_good_img_keypoints2)
+                good_img_landmarks1 = np.array(temp_good_img_landmarks1)
+                
+                # cutoff = min(120,good_img_keypoints2.shape[0])
+                # good_img_keypoints2 = good_img_keypoints2[0:cutoff]
+                # good_img_landmarks1 = good_img_landmarks1[0:cutoff]
+                
+            
             p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
 
             # plots candidate keypoints on left side and good keypoints in right side
