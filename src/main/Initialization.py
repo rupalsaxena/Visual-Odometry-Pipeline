@@ -1,25 +1,21 @@
 import cv2
 import numpy as np
-
-from numpy.core.numeric import identity
-from scipy.spatial.distance import cdist
-
-from Image import Image
 from helpers import helpers
 
 class Initialization:
-    def __init__(self, img1, img2, K):
+    def __init__(self, img1, img2, K, config):
         self.image1 = img1
         self.image2 = img2
         self.K = K
+        self.config = config
         self.helpers = helpers()
 
     def run(self):
         kpts1, kpts2 = self.klt_matching(self.image1, self.image2)
-        E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
-        landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
 
-        # Question: Why are we multiplying R and T?
+        E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
+
+        landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
         T = -R @ T
 
         return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), T
@@ -28,19 +24,20 @@ class Initialization:
     def klt_matching(self, image1, image2):
         image1 = np.uint8(image1)
         image2 = np.uint8(image2)
-        # params for ShiTomasi corner detection
-        feature_params = dict( maxCorners = 1000,
-                            qualityLevel = 0.01,
-                            minDistance = 7,
-                            blockSize = 7 )
-        # Parameters for lucas kanade optical flow
-        lk_params = dict( winSize  = (49,49),
-                  maxLevel = 7,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+        feature_params = dict(maxCorners = self.config["ShiTomasi_params"]["maxCorners"],
+                            qualityLevel = self.config["ShiTomasi_params"]["qualityLevel"],
+                            minDistance = self.config["ShiTomasi_params"]["minDistance"],
+                            blockSize = self.config["ShiTomasi_params"]["blockSize"])
+        
+        lk_params = dict( winSize  = (self.config["KLT_params"]["winSize"][0],self.config["KLT_params"]["winSize"][1]),
+                  maxLevel = self.config["KLT_params"]["maxLevel"],
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, self.config["KLT_params"]["EPS"], self.config["KLT_params"]["COUNT"]))
 
         p0 = cv2.goodFeaturesToTrack(image1, mask = None, **feature_params)
 
-        p1, st, err = cv2.calcOpticalFlowPyrLK(image1, image2, p0, None, **lk_params)
+        p1, st, _ = cv2.calcOpticalFlowPyrLK(image1, image2, p0, None, **lk_params)
+
         # Select good points
         if p1 is not None:
             good_new = p1[st==1]

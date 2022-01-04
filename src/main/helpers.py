@@ -1,5 +1,5 @@
 import os
-
+import yaml
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -107,3 +107,7 @@ class helpers:
         ani = FuncAnimation(fig, update, frames=points,
                             init_func=init, blit=True)
         plt.show()
+
+    def read_yaml(self, path):
+        with open(path, "r") as f:
+            return yaml.safe_load(f)
