@@ -3,10 +3,10 @@ import time
 from pipeline import Pipeline
 from helpers import helpers
 
-CONFIG_PATH = os.environ["CONFIG_PATH"]
-
-#CONFIG_PATH = "src/main/configs/Parking.yaml"
+CONFIG_PATH = "src/main/configs/Parking.yaml"
 #CONFIG_PATH = "src/main/configs/malaga.yaml"
+
+CONFIG_PATH = os.environ["CONFIG_PATH"]
 
 h = helpers()
 config = h.read_yaml(CONFIG_PATH)
