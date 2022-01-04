@@ -65,7 +65,7 @@ class Continuous:
                 tvec = -R @ tvec
                 
                 print(i)
-                print(tvec)
+                print(len(good_img_landmarks1))
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
