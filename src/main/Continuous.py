@@ -70,7 +70,6 @@ class Continuous:
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
-            continue
         
             # logic to add candidate keypoints
             
