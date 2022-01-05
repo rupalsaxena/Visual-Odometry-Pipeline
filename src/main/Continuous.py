@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from helpers import helpers
+import random
 
 class Continuous:
     def __init__(self, keypoints, landmarks, T, images, K, config, baseline):
@@ -24,8 +25,8 @@ class Continuous:
         T_X = [self.init_T[0][0]]
         T_Y = [self.init_T[2][0]]
 
-        plt.xlim((self.config["plot_x_scale"][0],self.config["plot_x_scale"][1]))
-        plt.ylim((self.config["plot_y_scale"][0],self.config["plot_y_scale"][1]))
+        plt.xlim((self.config["plot_x_scale"][0] - 5,self.config["plot_x_scale"][1]))
+        plt.ylim((self.config["plot_y_scale"][0] - 5,self.config["plot_y_scale"][1]))
 
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
@@ -69,6 +70,7 @@ class Continuous:
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
+            continue
         
             # logic to add candidate keypoints
             
@@ -275,7 +277,8 @@ class Continuous:
                     
                     # t_cam is points3d in view of the camera frame (0,0,0 at camera)
                     t_cam = R_first.T @ points3D[0:3] - R_first.T @ t_first
-                    if (t_cam[2] > 0 ):    
+                    if (t_cam[2] > 0 ): 
+                        pass   
                         good_img_keypoints2 = np.vstack([good_img_keypoints2,candidate_kpts[idx,:]])
                         good_img_landmarks1 = np.vstack([good_img_landmarks1,(points3D[0:3]).T]) 
                           
@@ -325,9 +328,15 @@ class Continuous:
             horizontal_concat = np.concatenate((output_image1, output_image2), axis=1)
             cv2.imshow('left_candidate right_initialized', horizontal_concat)
             plt.scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1)
+            print(good_img_landmarks1.shape)
+            sample_landmarks = np.array(random.choices(good_img_landmarks1.tolist(), k=30)).reshape(3,-1)
+            print(sample_landmarks.shape)
+            points = plt.scatter(sample_landmarks[0,:], sample_landmarks[2,:], c="#00ff00", s=0.5)
             # plt.show()
-            cv2.waitKey(1)
+            # cv2.waitKey(100000)
             plt.pause(0.05)
+            # plt.scatter(sample_landmarks[0,:], sample_landmarks[2,:], c="#ffffff", s=1)
+            points.remove()
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
         plt.show()
         plt.plot(T_X,T_Y)
