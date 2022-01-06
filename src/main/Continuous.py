@@ -296,7 +296,7 @@ class Continuous:
                         good_img_keypoints2 = np.vstack([good_img_keypoints2,candidate_kpts[idx,:]])
                         good_img_landmarks1 = np.vstack([good_img_landmarks1,(points3D[0:3]).T]) 
                         # plt.scatter(points3D[0],points3D[2],c='#000000', s=1)
-                          
+
                 candidate_kpts = np.delete(candidate_kpts,index[0],axis = 0)
                 rvec_candidate = np.delete(rvec_candidate,index[0],axis = 0)
                 tvec_candidate = np.delete(tvec_candidate,index[0],axis = 0)
@@ -331,7 +331,7 @@ class Continuous:
 
             p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
             # print(tvec)
-
+            # print(T_X[-1], T_Y[-1])
             # plots candidate keypoints on left side and good keypoints in right side
             candidate_kpts_obj = self.h.kpts2kpts2Object(candidate_kpts)
             output_image1 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), candidate_kpts_obj, 0, (0,255,255))
@@ -346,12 +346,12 @@ class Continuous:
             ax[2].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
 
             points = ax[2].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
+
             ax[0].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
-
             ax[1].bar(i, len(good_img_landmarks1), color="#000000")
-
             if(i>25):
-                ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
+                # ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
+                ax[2].axis(xmin=min(good_img_landmarks1[:,0])-2, xmax=max(good_img_landmarks1[:,0])+2, ymin=min(good_img_landmarks1[:,2])-2, ymax=max(good_img_landmarks1[:,2])+2)
                 ax[1].axis(xmin=i-20, xmax= i)
 
             ax[0].set_title("Full trajectory", fontsize=7)
