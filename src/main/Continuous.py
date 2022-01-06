@@ -254,7 +254,7 @@ class Continuous:
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
                 threshold = self.config["angle_threshold"]/180*np.pi
                 
-                if good_img_keypoints2.shape[0] > 100:
+                if good_img_keypoints2.shape[0] > 20:
                     threshold = threshold
                 else:
                     threshold = 1/180*np.pi
