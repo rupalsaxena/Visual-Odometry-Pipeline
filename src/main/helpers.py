@@ -20,7 +20,7 @@ class helpers:
         
         index = 0
         for file in sorted(os.listdir(img_dir)):
-            if file.endswith(valid_images) and (index <300):
+            if file.endswith(valid_images):
                 imagesList.append(file)    
             index +=1
 
