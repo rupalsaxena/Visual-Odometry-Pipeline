@@ -1,46 +1,57 @@
 import cv2
 import numpy as np
-
-from numpy.core.numeric import identity
-from scipy.spatial.distance import cdist
-
-from Image import Image
 from helpers import helpers
 
 class Initialization:
-    def __init__(self, img1, img2, K):
+    def __init__(self, img1, img2, K, config):
         self.image1 = img1
         self.image2 = img2
         self.K = K
+        self.config = config
         self.helpers = helpers()
 
     def run(self):
-        img_obj1 = Image(self.image1)
-        img_obj2 = Image(self.image2)
-
         kpts1, kpts2 = self.klt_matching(self.image1, self.image2)
-
         E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
-        return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), R, T
+        T = -R @ T
+        
+        # print(inliers2.shape)
+        # print(landmarks.shape)
+        
+        landmarks = landmarks.T
+        inliers2 = inliers2.T
+        
+        idx = np.where(landmarks[:,2]>0)
+        landmarks = landmarks[idx]
+        inliers2 = inliers2[idx]
+        
+        
+        inliers2 = inliers2.T
+        landmarks = landmarks.T
+        
+        inliers2 = self.helpers.IntListToPoint2D(inliers2)
+        landmarks = self.helpers.IntListto3D(landmarks)
+        return inliers2,landmarks, T
 
 
     def klt_matching(self, image1, image2):
         image1 = np.uint8(image1)
         image2 = np.uint8(image2)
-        # params for ShiTomasi corner detection
-        feature_params = dict( maxCorners = 1000,
-                            qualityLevel = 0.3,
-                            minDistance = 7,
-                            blockSize = 7 )
-        # Parameters for lucas kanade optical flow
-        lk_params = dict( winSize  = (49,49),
-                  maxLevel = 7,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+        feature_params = dict(maxCorners = self.config["ShiTomasi_params"]["maxCorners"],
+                            qualityLevel = self.config["ShiTomasi_params"]["qualityLevel"],
+                            minDistance = self.config["ShiTomasi_params"]["minDistance"],
+                            blockSize = self.config["ShiTomasi_params"]["blockSize"])
+        
+        lk_params = dict( winSize  = (self.config["KLT_params"]["winSize"][0],self.config["KLT_params"]["winSize"][1]),
+                  maxLevel = self.config["KLT_params"]["maxLevel"],
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, self.config["KLT_params"]["EPS"], self.config["KLT_params"]["COUNT"]))
 
         p0 = cv2.goodFeaturesToTrack(image1, mask = None, **feature_params)
 
-        p1, st, err = cv2.calcOpticalFlowPyrLK(image1, image2, p0, None, **lk_params)
+        p1, st, _ = cv2.calcOpticalFlowPyrLK(image1, image2, p0, None, **lk_params)
+
         # Select good points
         if p1 is not None:
             good_new = p1[st==1]
@@ -53,7 +64,23 @@ class Initialization:
         """
         R1, R2, T = cv2.decomposeEssentialMat(E) 
         
-        points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1, T, inliers1, inliers2)
+        # T = T *0.1
+        
+        rvec1,_ = cv2.Rodrigues(R1)
+        rvec2,_ = cv2.Rodrigues(R2)
+        
+        if np.linalg.norm(rvec1)>1.5:
+            R1 = R2
+        elif np.linalg.norm(rvec2)>1.5:
+            R2 = R1
+        
+        # points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1.T, -R1.T @ T, inliers1, inliers2)
+        # points3D_2, sum_left_2, sum_right_2 = self.triangulate(R2.T, -R2.T @ T, inliers1, inliers2)
+        # points3D_3, sum_left_3, sum_right_3 = self.triangulate(R1.T, -R1.T @ -T, inliers1, inliers2)
+        # points3D_4, sum_left_4, sum_right_4 = self.triangulate(R2.T, -R2.T @ -T, inliers1, inliers2)
+        
+        
+        points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1,  T, inliers1, inliers2)
         points3D_2, sum_left_2, sum_right_2 = self.triangulate(R2, T, inliers1, inliers2)
         points3D_3, sum_left_3, sum_right_3 = self.triangulate(R1, -T, inliers1, inliers2)
         points3D_4, sum_left_4, sum_right_4 = self.triangulate(R2, -T, inliers1, inliers2)
@@ -96,48 +123,6 @@ class Initialization:
         relative_p2 = M1 @  points3D
 
         return (points3D, sum(relative_p1[2]>0), sum(relative_p2[2]>0))
-
-
-    def get_keypoints_correspondence(self, keypoints1, keypoints2, keypoint_des1, keypoint_des2):
-        """
-        out: return corresponding matched keypoints between both images [[keypoints 1], [keypoints 2]]
-        """
-        matches = self.match_descriptors(keypoint_des1, keypoint_des2)
-
-        kpt_matching = [[],[]]
-        for idx, match in enumerate(matches):
-            if(match is None):
-                continue
-            kpt1 = keypoints1[idx]
-            kpt2 = keypoints2[match]
-
-            kpt_matching[0].append(kpt1)
-            kpt_matching[1].append(kpt2)
-
-        return kpt_matching
-
-    def match_descriptors(self, keypoint_des1, keypoint_des2):
-        """
-        Match keypoint descriptors using euclidean distance
-        out: Matching list where matching[i] means keypoint_1[i] matches to keypoint_2[matching[i]]
-        """
-        MAX_DIST = 1e2
-        done_des2 = set()
-        matching = [None]*len(keypoint_des1)
-        dist = cdist( keypoint_des1, keypoint_des2, metric="euclidean")
-
-        for idx, dist_1 in enumerate(dist):
-            while(True):
-                min_match = np.argmin(dist_1)
-                if(dist_1[min_match]==MAX_DIST):
-                    break
-                elif(min_match not in done_des2):
-                    done_des2.add(min_match)
-                    matching[idx] = min_match
-                    break
-                dist_1[min_match] = MAX_DIST
-
-        return matching
     
     def getEssentialMatrix(self, kpts1, kpts2):
         """

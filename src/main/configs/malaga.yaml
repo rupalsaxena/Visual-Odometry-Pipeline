@@ -1,0 +1,31 @@
+config:
+  images_path: 'data/malaga-urban-dataset-extract-07/left_800x600/'
+  K_path: 'data/malaga-urban-dataset-extract-07/k_800x600_left.txt'
+  basline_images: [0,2]
+  Initialization:
+    ShiTomasi_params:
+      maxCorners: 1000
+      qualityLevel: 0.01
+      minDistance: 7
+      blockSize: 7
+    KLT_params: 
+      winSize: [49, 49]
+      maxLevel: 7
+      EPS: 10
+      COUNT: 0.03
+
+  Continuous:
+    ShiTomasi_params:
+      maxCorners: 1000
+      qualityLevel: 0.01
+      minDistance: 20
+      blockSize: 20
+    KLT_params: 
+      winSize: [49, 49]
+      maxLevel: 1
+      EPS: 10
+      COUNT: 0.03
+    angle_threshold: 5 
+    remove_similar: False # boolean value
+    plot_x_scale: [-50, 50]
+    plot_y_scale: [0, 200]

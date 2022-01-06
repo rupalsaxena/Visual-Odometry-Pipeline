@@ -5,18 +5,18 @@ from helpers import helpers
 import numpy as np
 
 # params for ShiTomasi corner detection
-feature_params = dict( maxCorners = 100,
-                       qualityLevel = 0.3,
+feature_params = dict( maxCorners = 1000,
+                       qualityLevel = 0.05,
                        minDistance = 7,
                        blockSize = 7 )
 # Parameters for lucas kanade optical flow
-lk_params = dict( winSize  = (15,15),
-                  maxLevel = 2,
+lk_params = dict( winSize  = (49,49),
+                  maxLevel = 7,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 # Create some random colors
 color = [255,0,0]
 # Take first frame and find corners in it
-IMAGE_PATH = "data/parking/images/"
+IMAGE_PATH = 'data/malaga-urban-dataset-extract-07/left_800x600/'
 images = helpers().loadImages(IMAGE_PATH)
 
 images = list(map(np.uint8, images))
@@ -24,10 +24,10 @@ old_frame = images[0]
 
 old_gray = old_frame
 p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
-print(p0)
+print(p0.shape)
 # Create a mask image for drawing purposes
 mask = np.zeros_like(old_frame)
- 
+# import pdb; pdb.set_trace() 
 for i in range(1, len(images)):
 
     frame = images[i]

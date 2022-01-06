@@ -1,9 +1,13 @@
 import os
+import yaml
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
 from Point2D import Point2D
 from Point3D import Point3D
+
 
 class helpers:
     def __init__(self):
@@ -16,14 +20,15 @@ class helpers:
         
         index = 0
         for file in sorted(os.listdir(img_dir)):
-            if file.endswith(valid_images) &(index <30):
+            if file.endswith(valid_images) and (index <300):
                 imagesList.append(file)    
-                index +=1
-                
+            index +=1
+
         loadedImages = []
         for image in imagesList:
             img = cv2.imread(img_dir + image)
             img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            # img = cv2.resize(img, (600, int(img.shape[1]*400.0/img.shape[0])) )
             img = np.float32(img)
             loadedImages.append(img)
 
@@ -80,3 +85,29 @@ class helpers:
 
         keypoints_decription = np.array(keypoints_decription)
         return keypoints_decription
+    def kpts2kpts2Object(self, kpts):
+        return list(cv2.KeyPoint(kpts[i][0], kpts[i][1],2 ) for i in range(len(kpts)))
+    
+    def generate_trajectory(self, points):
+        fig, ax = plt.subplots()
+        xdata, ydata = [], []
+        ln, = plt.plot([], [], 'ro')
+
+        def init():
+            ax.set_xlim(-100, 100)
+            ax.set_ylim(0, 200)
+            return ln,
+
+        def update(points):
+            xdata.append(points[0])
+            ydata.append(points[1])
+            ln.set_data(xdata, ydata)
+            return ln,
+
+        ani = FuncAnimation(fig, update, frames=points,
+                            init_func=init, blit=True)
+        plt.show()
+
+    def read_yaml(self, path):
+        with open(path, "r") as f:
+            return yaml.safe_load(f)

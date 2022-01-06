@@ -1,20 +1,30 @@
 import os
 import time
 from pipeline import Pipeline
+from helpers import helpers
 
+CONFIG_PATH = "src/main/configs/Parking.yaml"
+#CONFIG_PATH = "src/main/configs/malaga.yaml"
+#CONFIG_PATH = "src/main/configs/KITTI.yaml" 
 
-IMAGE_PATH = "data/parking/images/"
-K_PATH = "data/parking/K.txt"
+CONFIG_PATH = os.environ["CONFIG_PATH"]
+
+h = helpers()
+config = h.read_yaml(CONFIG_PATH)
+config = config["config"]
+
+image_path = config["images_path"]
+K_path = config["K_path"]
 
 def main():
     start_time = time.time()
 
     current_path = os.getcwd()
 
-    img_dir = os.path.join(current_path, IMAGE_PATH)
-    K_file = os.path.join(current_path, K_PATH)
+    img_dir = os.path.join(current_path, image_path)
+    K_file = os.path.join(current_path, K_path)
 
-    pipeline = Pipeline(img_dir, K_file)
+    pipeline = Pipeline(img_dir, K_file, config)
     pipeline.run()
 
     print(f"runtime in seconds: {time.time() - start_time}")
