@@ -6,7 +6,8 @@ class Pipeline:
     def __init__(self, img_dir, K_file, config):
         self.h = helpers()
         self.config = config
-        self.images = self.h.loadImages(img_dir)
+        should_resize = config["resize"]
+        self.images = self.h.loadImages(img_dir, should_resize)
         self.K = self.h.load_poses(K_file)
     
     def run(self):

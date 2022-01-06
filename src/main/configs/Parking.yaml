@@ -2,6 +2,7 @@ config:
   images_path: "data/parking/images/"
   K_path: "data/parking/K.txt"
   basline_images: [0,2]
+  resize: False
   Initialization:
     ShiTomasi_params:
       maxCorners: 1000

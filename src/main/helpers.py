@@ -13,7 +13,7 @@ class helpers:
     def __init__(self):
         pass
     
-    def loadImages(self, img_dir):
+    def loadImages(self, img_dir, should_resize):
         "return list of numpy array of images"
         imagesList = []
         valid_images = (".jpg",".gif",".png",".tga")
@@ -28,7 +28,8 @@ class helpers:
         for image in imagesList:
             img = cv2.imread(img_dir + image)
             img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-            img = cv2.resize(img, dsize=None, fx=0.5, fy=0.5 )
+            if should_resize:
+                img = cv2.resize(img, dsize=None, fx=0.5, fy=0.5 )
             # img = np.float32(img)
             loadedImages.append(img)
 
