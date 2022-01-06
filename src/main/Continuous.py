@@ -350,8 +350,8 @@ class Continuous:
             ax[0].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
             ax[1].bar(i, len(good_img_landmarks1), color="#000000")
             if(i>25):
-                # ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
-                ax[2].axis(xmin=min(good_img_landmarks1[:,0])-2, xmax=max(good_img_landmarks1[:,0])+2, ymin=min(good_img_landmarks1[:,2])-2, ymax=max(good_img_landmarks1[:,2])+2)
+                ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
+                #ax[2].axis(xmin=min(good_img_landmarks1[:,0])-2, xmax=max(good_img_landmarks1[:,0])+2, ymin=min(good_img_landmarks1[:,2])-2, ymax=max(good_img_landmarks1[:,2])+2)
                 ax[1].axis(xmin=i-20, xmax= i)
 
             ax[0].set_title("Full trajectory", fontsize=7)
