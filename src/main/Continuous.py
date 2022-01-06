@@ -351,7 +351,7 @@ class Continuous:
             ax[1].bar(i, len(good_img_landmarks1), color="#000000")
 
             if(i>25):
-                ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
+                ax[2].axis(xmin=min(T_X[-20:]) - 10, xmax = max(T_X[-20:]) +10, ymin=min(T_Y[-20:])-10, ymax=max(T_Y[-20:])+10)
                 ax[1].axis(xmin=i-20, xmax= i)
 
             ax[0].set_title("Full trajectory", fontsize=7)
