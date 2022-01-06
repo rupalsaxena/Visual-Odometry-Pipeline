@@ -33,8 +33,11 @@ class Continuous:
 
         good_img_landmarks1 = self.init_landmarks
 
+        ax[2].axis(xmin=T_X[-1]-2, xmax=T_X[-1]+2, ymin=T_Y[-1]-2, ymax=T_Y[-1]+2)
+
         for i in range(0, min(len(self.images),100000)):
-            ax[0].axis(xmin=0, xmax=T_X[-1]+50, ymin =0, ymax=T_Y[-1]+50)
+
+            ax[0].axis(xmin=min(T_X) - 1, xmax=max(T_X) + 1, ymin =min(T_Y) - 1, ymax=max(T_Y) + 1)
             if i<=self.baseline[1]:
                 continue
             
@@ -251,7 +254,7 @@ class Continuous:
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
                 threshold = self.config["angle_threshold"]/180*np.pi
                 
-                if good_img_keypoints2.shape[0] > 20:
+                if good_img_keypoints2.shape[0] > 100:
                     threshold = threshold
                 else:
                     threshold = 1/180*np.pi
@@ -348,7 +351,7 @@ class Continuous:
             ax[1].bar(i, len(good_img_landmarks1), color="#000000")
 
             if(i>25):
-                ax[2].axis(xmin=T_X[-20]-10, xmax = T_X[-1]+25, ymin=T_Y[-20]-10, ymax=T_Y[-1]+25)
+                ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
                 ax[1].axis(xmin=i-20, xmax= i)
 
             ax[0].set_title("Full trajectory", fontsize=7)
