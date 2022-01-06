@@ -50,3 +50,5 @@ python3 src/main/main.py
 Please note that we used following versions while developing:
 1. conda 4.10.3
 2. Python 3.8.8
+
+In addition, we provided output of conda env export in a txt file conda_env.txt.
