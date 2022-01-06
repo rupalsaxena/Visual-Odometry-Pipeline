@@ -17,8 +17,27 @@ class Initialization:
 
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
         T = -R @ T
+        
+        print(inliers2.shape)
+        print(landmarks.shape)
+        
+        landmarks = landmarks.T
+        inliers2 = inliers2.T
+        
+        idx = np.where(landmarks[:,2]>0)
+        landmarks = landmarks[idx]
+        inliers2 = inliers2[idx]
+        
+        
+        inliers2 = inliers2.T
+        landmarks = landmarks.T
+        
+        inliers2 = self.helpers.IntListToPoint2D(inliers2)
+        landmarks = self.helpers.IntListto3D(landmarks)
+        
 
-        return self.helpers.IntListToPoint2D(inliers2), self.helpers.IntListto3D(landmarks), T
+
+        return inliers2,landmarks, T
 
 
     def klt_matching(self, image1, image2):
@@ -50,7 +69,23 @@ class Initialization:
         """
         R1, R2, T = cv2.decomposeEssentialMat(E) 
         
-        points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1, T, inliers1, inliers2)
+        # T = T *0.1
+        
+        rvec1,_ = cv2.Rodrigues(R1)
+        rvec2,_ = cv2.Rodrigues(R2)
+        
+        if np.linalg.norm(rvec1)>1.5:
+            R1 = R2
+        elif np.linalg.norm(rvec2)>1.5:
+            R2 = R1
+        
+        # points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1.T, -R1.T @ T, inliers1, inliers2)
+        # points3D_2, sum_left_2, sum_right_2 = self.triangulate(R2.T, -R2.T @ T, inliers1, inliers2)
+        # points3D_3, sum_left_3, sum_right_3 = self.triangulate(R1.T, -R1.T @ -T, inliers1, inliers2)
+        # points3D_4, sum_left_4, sum_right_4 = self.triangulate(R2.T, -R2.T @ -T, inliers1, inliers2)
+        
+        
+        points3D_1, sum_left_1, sum_right_1 = self.triangulate(R1,  T, inliers1, inliers2)
         points3D_2, sum_left_2, sum_right_2 = self.triangulate(R2, T, inliers1, inliers2)
         points3D_3, sum_left_3, sum_right_3 = self.triangulate(R1, -T, inliers1, inliers2)
         points3D_4, sum_left_4, sum_right_4 = self.triangulate(R2, -T, inliers1, inliers2)
@@ -69,6 +104,8 @@ class Initialization:
         if sum_left_4 == sum_right_4 and sum_left_4 >= max_points:
             point3D, R, T  = points3D_4.copy(), R2.copy(), -T.copy()
             max_points = sum_left_4
+        
+        
 
         return point3D, R, T
     

@@ -3,7 +3,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from helpers import helpers
-import random
 
 class Continuous:
     def __init__(self, keypoints, landmarks, T, images, K, config, baseline):
@@ -24,16 +23,20 @@ class Continuous:
     def run(self):
         T_X = [self.init_T[0][0]]
         T_Y = [self.init_T[2][0]]
+        print(len(self.images))
 
-        plt.xlim((self.config["plot_x_scale"][0] - 5,self.config["plot_x_scale"][1]))
-        plt.ylim((self.config["plot_y_scale"][0] - 5,self.config["plot_y_scale"][1]))
+        fig, ax = plt.subplots(1,3)
+        # ax[0].ylim((self.config["plot_y_scale"][0],self.config["plot_y_scale"][1]))
+
+        
 
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
 
         good_img_landmarks1 = self.init_landmarks
 
-        for i in range(0, min(len(self.images),5000)):
+        for i in range(0, min(len(self.images),100000)):
+            ax[0].axis(xmin=0, xmax=T_X[-1]+50, ymin =0, ymax=T_Y[-1]+50)
             if i<=self.baseline[1]:
                 continue
             
@@ -64,6 +67,11 @@ class Continuous:
                 R = R.T
                 rvec,_ = cv2.Rodrigues(R)        
                 tvec = -R @ tvec
+                
+                if tvec[1] > 1:
+                    tvec[1] = 1
+                if tvec[1] < -1:
+                    tvec[1] = -1    
                 
                 print(i)
                 print(len(good_img_landmarks1))
@@ -244,6 +252,13 @@ class Continuous:
                     
                 #if that angle is above a certain threshold, add it to the good_img_keypoints2
                 threshold = self.config["angle_threshold"]/180*np.pi
+                
+                if good_img_keypoints2.shape[0] > 20:
+                    threshold = threshold
+                else:
+                    threshold = 1/180*np.pi
+                    
+                
                 index = np.where(angles >= threshold)
                 
                 for l in range(min(index[0].shape[0],200)):
@@ -276,10 +291,10 @@ class Continuous:
                     
                     # t_cam is points3d in view of the camera frame (0,0,0 at camera)
                     t_cam = R_first.T @ points3D[0:3] - R_first.T @ t_first
-                    if (t_cam[2] > 0 ): 
-                        pass   
+                    if (t_cam[2] > 0 ):    
                         good_img_keypoints2 = np.vstack([good_img_keypoints2,candidate_kpts[idx,:]])
                         good_img_landmarks1 = np.vstack([good_img_landmarks1,(points3D[0:3]).T]) 
+                        # plt.scatter(points3D[0],points3D[2],c='#000000', s=1)
                           
                 candidate_kpts = np.delete(candidate_kpts,index[0],axis = 0)
                 rvec_candidate = np.delete(rvec_candidate,index[0],axis = 0)
@@ -315,6 +330,7 @@ class Continuous:
                 
             
             p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
+            print(tvec)
 
             # plots candidate keypoints on left side and good keypoints in right side
             candidate_kpts_obj = self.h.kpts2kpts2Object(candidate_kpts)
@@ -326,15 +342,25 @@ class Continuous:
 
             horizontal_concat = np.concatenate((output_image1, output_image2), axis=1)
             cv2.imshow('left_candidate right_initialized', horizontal_concat)
-            plt.scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1)
-            print(good_img_landmarks1.shape)
-            sample_landmarks = np.array(random.choices(good_img_landmarks1.tolist(), k=30)).reshape(3,-1)
-            print(sample_landmarks.shape)
-            points = plt.scatter(sample_landmarks[0,:], sample_landmarks[2,:], c="#00ff00", s=0.5)
+
+            ax[0].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1) #row=0, col=0
+            ax[2].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1) #row=0, col=0
+            # ax[1, 0].plot(range(10), 'b') #row=1, col=0
+            # ax[0, 1].plot(range(10), 'g') #row=0, col=1
+            points = ax[2].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
+            ax[0].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
+
+            ax[1].bar(i, len(good_img_landmarks1), color="#000000")
+
+            if(i>25):
+                ax[2].axis(xmin=T_X[-20]-10, xmax = T_X[-1]+25, ymin=T_Y[-20]-10, ymax=T_Y[-1]+25)
+                ax[1].axis(xmin=i-20, xmax= i)
+            # plt.scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1)
+            # points = plt.scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1)
+        
             # plt.show()
-            # cv2.waitKey(100000)
+            cv2.waitKey(1)
             plt.pause(0.05)
-            # plt.scatter(sample_landmarks[0,:], sample_landmarks[2,:], c="#ffffff", s=1)
             points.remove()
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
         plt.show()
