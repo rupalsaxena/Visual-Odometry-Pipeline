@@ -28,8 +28,8 @@ class helpers:
         for image in imagesList:
             img = cv2.imread(img_dir + image)
             img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-            # img = cv2.resize(img, (600, int(img.shape[1]*400.0/img.shape[0])) )
-            img = np.float32(img)
+            # img = cv2.resize(img, dsize=None, fx=0.5, fy=0.5 )
+            # img = np.float32(img)
             loadedImages.append(img)
 
         return loadedImages
