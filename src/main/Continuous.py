@@ -23,12 +23,10 @@ class Continuous:
     def run(self):
         T_X = [self.init_T[0][0]]
         T_Y = [self.init_T[2][0]]
-        print(len(self.images))
+        # print(len(self.images))
 
         fig, ax = plt.subplots(1,3)
         # ax[0].ylim((self.config["plot_y_scale"][0],self.config["plot_y_scale"][1]))
-
-        
 
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
@@ -73,8 +71,8 @@ class Continuous:
                 if tvec[1] < -1:
                     tvec[1] = -1    
                 
-                print(i)
-                print(len(good_img_landmarks1))
+                # print(i)
+                # print(len(good_img_landmarks1))
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
@@ -327,10 +325,9 @@ class Continuous:
                 # cutoff = min(120,good_img_keypoints2.shape[0])
                 # good_img_keypoints2 = good_img_keypoints2[0:cutoff]
                 # good_img_landmarks1 = good_img_landmarks1[0:cutoff]
-                
-            
+
             p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
-            print(tvec)
+            # print(tvec)
 
             # plots candidate keypoints on left side and good keypoints in right side
             candidate_kpts_obj = self.h.kpts2kpts2Object(candidate_kpts)
@@ -339,14 +336,12 @@ class Continuous:
             good_img_kpts_obj = self.h.kpts2kpts2Object(good_img_keypoints2)
             output_image2 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), good_img_kpts_obj, 0, (0,255,0))
 
-
             horizontal_concat = np.concatenate((output_image1, output_image2), axis=1)
-            cv2.imshow('left_candidate right_initialized', horizontal_concat)
+            cv2.imshow('left_are_candidate_kpts right_are_current_kpts', horizontal_concat)
 
-            ax[0].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1) #row=0, col=0
-            ax[2].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1) #row=0, col=0
-            # ax[1, 0].plot(range(10), 'b') #row=1, col=0
-            # ax[0, 1].plot(range(10), 'g') #row=0, col=1
+            ax[0].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
+            ax[2].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
+
             points = ax[2].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
             ax[0].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
 
@@ -355,16 +350,15 @@ class Continuous:
             if(i>25):
                 ax[2].axis(xmin=T_X[-20]-10, xmax = T_X[-1]+25, ymin=T_Y[-20]-10, ymax=T_Y[-1]+25)
                 ax[1].axis(xmin=i-20, xmax= i)
-            # plt.scatter(T_X[-1], T_Y[-1], c='#ff0000', s=1)
-            # points = plt.scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1)
-        
-            # plt.show()
+
+            ax[0].set_title("Global trajectory", fontsize=7)
+            ax[1].set_title("Num of kpts detected", fontsize=7)
+            ax[2].set_title("Local trajectory (last 20 frames)", fontsize=7)
+
             cv2.waitKey(1)
             plt.pause(0.05)
             points.remove()
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
-        plt.show()
-        plt.plot(T_X,T_Y)
-        plt.show()
 
-        self.h.generate_trajectory(list(zip(T_X, T_Y)))
+        plt.show()
+        # self.h.generate_trajectory(list(zip(T_X, T_Y)))

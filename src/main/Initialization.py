@@ -12,14 +12,12 @@ class Initialization:
 
     def run(self):
         kpts1, kpts2 = self.klt_matching(self.image1, self.image2)
-
         E, inliers1, inliers2 = self.getEssentialMatrix(kpts1, kpts2)  
-
         landmarks, R, T = self.disambiguateEssential(E, inliers1, inliers2)  
         T = -R @ T
         
-        print(inliers2.shape)
-        print(landmarks.shape)
+        # print(inliers2.shape)
+        # print(landmarks.shape)
         
         landmarks = landmarks.T
         inliers2 = inliers2.T
@@ -34,9 +32,6 @@ class Initialization:
         
         inliers2 = self.helpers.IntListToPoint2D(inliers2)
         landmarks = self.helpers.IntListto3D(landmarks)
-        
-
-
         return inliers2,landmarks, T
 
 
@@ -104,8 +99,6 @@ class Initialization:
         if sum_left_4 == sum_right_4 and sum_left_4 >= max_points:
             point3D, R, T  = points3D_4.copy(), R2.copy(), -T.copy()
             max_points = sum_left_4
-        
-        
 
         return point3D, R, T
     
