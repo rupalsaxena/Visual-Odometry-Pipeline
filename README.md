@@ -25,4 +25,23 @@ chmod +x kitti.sh
 ```
 In case you wanna run for a dataset multiple times, you do not to run chmod command multiple times. chmod command only make a file executable. 
 
-In case you are windows user. 
+If you are windows user, you can still run the pipeline for all three dataset. But in order to do so, you need to open src/main/main.py file and uncomment the config of dersired dataset.
+
+To run on parking, just uncomment the parking config path.
+```
+CONFIG_PATH = "src/main/configs/Parking.yaml"
+#CONFIG_PATH = "src/main/configs/malaga.yaml"
+#CONFIG_PATH = "src/main/configs/KITTI.yaml" 
+```
+To run on parking, just uncomment the malaga config path.
+```
+#CONFIG_PATH = "src/main/configs/Parking.yaml"
+CONFIG_PATH = "src/main/configs/malaga.yaml"
+#CONFIG_PATH = "src/main/configs/KITTI.yaml" 
+```
+To run on parking, just uncomment the kitti config path.
+```
+#CONFIG_PATH = "src/main/configs/Parking.yaml"
+#CONFIG_PATH = "src/main/configs/malaga.yaml"
+CONFIG_PATH = "src/main/configs/KITTI.yaml" 
+```
