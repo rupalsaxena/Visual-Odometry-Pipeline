@@ -351,9 +351,9 @@ class Continuous:
                 ax[2].axis(xmin=T_X[-20]-10, xmax = T_X[-1]+25, ymin=T_Y[-20]-10, ymax=T_Y[-1]+25)
                 ax[1].axis(xmin=i-20, xmax= i)
 
-            ax[0].set_title("Global trajectory", fontsize=7)
+            ax[0].set_title("Full trajectory", fontsize=7)
             ax[1].set_title("Num of kpts detected", fontsize=7)
-            ax[2].set_title("Local trajectory (last 20 frames)", fontsize=7)
+            ax[2].set_title("Trajectory of last 20 frames", fontsize=7)
 
             cv2.waitKey(1)
             plt.pause(0.05)
