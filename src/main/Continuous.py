@@ -22,18 +22,18 @@ class Continuous:
     
     def run(self):
         T_X = [self.init_T[0][0]]
-        T_Y = [self.init_T[2][0]]
+        T_Z = [self.init_T[2][0]]
 
         fig, ax = plt.subplots(2,2)
 
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
 
-        good_img_landmarks1 = self.init_landmarks
-        ax[1,1].axis(xmin=T_X[-1]-2, xmax=T_X[-1]+2, ymin=T_Y[-1]-2, ymax=T_Y[-1]+2)
+        good_img_landmarks = self.init_landmarks
+        ax[1,1].axis(xmin=T_X[-1]-2, xmax=T_X[-1]+2, ymin=T_Z[-1]-2, ymax=T_Z[-1]+2)
 
         for i in range(0, min(len(self.images),100000)):
-            ax[0,1].axis(xmin=min(T_X) - 1, xmax=max(T_X) + 1, ymin =min(T_Y) - 1, ymax=max(T_Y) + 1)
+            ax[0,1].axis(xmin=min(T_X) - 1, xmax=max(T_X) + 1, ymin =min(T_Z) - 1, ymax=max(T_Z) + 1)
 
             if i<=self.baseline[1]:
                 continue
@@ -41,24 +41,24 @@ class Continuous:
             p1, st1, _ = cv2.calcOpticalFlowPyrLK(self.images[i-1], self.images[i], p0, None, **self.lk_params)
 
             if p1 is not None:
-                good_img_keypoints2 = p1[st1==1]
+                good_img_keypoints = p1[st1==1]
                 temp_lst= []
 
                 for index, value in enumerate(st1):
                     if(value==1):
-                        temp_lst.append(good_img_landmarks1[index])
+                        temp_lst.append(good_img_landmarks[index])
                     
-                good_img_landmarks1 = np.array(temp_lst)
+                good_img_landmarks = np.array(temp_lst)
 
-            if len(good_img_keypoints2) > 4:
+            if len(good_img_keypoints) > 4:
                 retval, rvec, tvec, inliers = cv2.solvePnPRansac(
-                    good_img_landmarks1, good_img_keypoints2, self.K, None, flags=cv2.SOLVEPNP_P3P, confidence=0.9999
+                    good_img_landmarks, good_img_keypoints, self.K, None, flags=cv2.SOLVEPNP_P3P, confidence=0.9999
                 )
 
                 inliers = np.squeeze(np.array(inliers))
-                good_img_keypoints_temp = good_img_keypoints2
-                good_img_keypoints2 = good_img_keypoints2[inliers,:]
-                good_img_landmarks1 = good_img_landmarks1[inliers,:]
+                good_img_keypoints_temp = good_img_keypoints
+                good_img_keypoints = good_img_keypoints[inliers,:]
+                good_img_landmarks = good_img_landmarks[inliers,:]
                 
                 # inverse tvec and rvec
                 R,_ = cv2.Rodrigues(rvec)
@@ -72,7 +72,7 @@ class Continuous:
                     tvec[1] = -1    
 
                 T_X.append(tvec[0])
-                T_Y.append(tvec[2])
+                T_Z.append(tvec[2])
         
             # logic to add candidate keypoints
             
@@ -85,7 +85,7 @@ class Continuous:
             img_kpts = cv2.goodFeaturesToTrack(self.images[i], mask = None, **feature_params)
             img_kpts = np.squeeze(img_kpts)
 
-            # Second: img_kpts which are far away from good_img_keypoints2 are possible candidates kpts
+            # Second: img_kpts which are far away from good_img_keypoints are possible candidates kpts
             k = 0
             
             new_candidate = np.zeros((0,2)).astype('float32')
@@ -201,8 +201,8 @@ class Continuous:
                         if (min_norm1 > norm) &(j!=idx):
                             min_norm1 = norm
                             
-                    for j in range(good_img_keypoints2.shape[0]):
-                        b = good_img_keypoints2[j,:]
+                    for j in range(good_img_keypoints.shape[0]):
+                        b = good_img_keypoints[j,:]
                         norm = np.linalg.norm(a-b)
                         if min_norm2 > norm:
                             min_norm2= norm
@@ -245,10 +245,10 @@ class Continuous:
                         
                     angles[l] = abs(math.acos(temp))
                     
-                #if that angle is above a certain threshold, add it to the good_img_keypoints2
+                #if that angle is above a certain threshold, add it to the good_img_keypoints
                 threshold = self.config["angle_threshold"]/180*np.pi
                 
-                if good_img_keypoints2.shape[0] > 100:
+                if good_img_keypoints.shape[0] > 100:
                     threshold = threshold
                 else:
                     threshold = 1/180*np.pi
@@ -287,8 +287,8 @@ class Continuous:
                     # t_cam is points3d in view of the camera frame (0,0,0 at camera)
                     t_cam = R_first.T @ points3D[0:3] - R_first.T @ t_first
                     if (t_cam[2] > 0 ):    
-                        good_img_keypoints2 = np.vstack([good_img_keypoints2,candidate_kpts[idx,:]])
-                        good_img_landmarks1 = np.vstack([good_img_landmarks1,(points3D[0:3]).T]) 
+                        good_img_keypoints = np.vstack([good_img_keypoints,candidate_kpts[idx,:]])
+                        good_img_landmarks = np.vstack([good_img_landmarks,(points3D[0:3]).T]) 
 
                 candidate_kpts = np.delete(candidate_kpts,index[0],axis = 0)
                 rvec_candidate = np.delete(rvec_candidate,index[0],axis = 0)
@@ -296,46 +296,46 @@ class Continuous:
                 fir_obs_C = np.delete(fir_obs_C,index[0],axis =0)
 
                 if self.config["remove_similar"]:
-                    temp_good_img_keypoints2 = []
-                    temp_good_img_landmarks1 = []
-                    for idx in range(good_img_keypoints2.shape[0]):
-                        if(len(good_img_keypoints2.shape)!=2):
+                    temp_good_img_keypoints = []
+                    temp_good_img_landmarks = []
+                    for idx in range(good_img_keypoints.shape[0]):
+                        if(len(good_img_keypoints.shape)!=2):
                             break
                         
-                        a = good_img_keypoints2[idx,:]
+                        a = good_img_keypoints[idx,:]
                         min_norm = 100000000
                         
-                        for j in range(good_img_keypoints2.shape[0]):
-                            b = good_img_keypoints2[j,:]
+                        for j in range(good_img_keypoints.shape[0]):
+                            b = good_img_keypoints[j,:]
                             norm = np.linalg.norm(a-b)
                             if (min_norm > norm) &(j!=idx):
                                 min_norm = norm
                         
                         if min_norm > 3:
-                            temp_good_img_keypoints2.append(good_img_keypoints2[idx])
-                            temp_good_img_landmarks1.append(good_img_landmarks1[idx])
+                            temp_good_img_keypoints.append(good_img_keypoints[idx])
+                            temp_good_img_landmarks.append(good_img_landmarks[idx])
 
-                    good_img_keypoints2 = np.array(temp_good_img_keypoints2)
-                    good_img_landmarks1 = np.array(temp_good_img_landmarks1)
+                    good_img_keypoints = np.array(temp_good_img_keypoints)
+                    good_img_landmarks = np.array(temp_good_img_landmarks)
 
-            p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
+            p0 = good_img_keypoints.reshape(-1,1,2) # P as per problem statement
             candidate_kpts_obj = self.h.kpts2kpts2Object(candidate_kpts)
             output_image1 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), candidate_kpts_obj, 0, (255,0,0))
 
-            good_img_kpts_obj = self.h.kpts2kpts2Object(good_img_keypoints2)
+            good_img_kpts_obj = self.h.kpts2kpts2Object(good_img_keypoints)
             output_image2 = cv2.drawKeypoints(output_image1, good_img_kpts_obj, 0, (0,255,0))
 
-            ax[0,1].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
-            ax[1,1].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
+            ax[0,1].scatter(T_X[-1], T_Z[-1], c='#ff0000', s=3) #row=0, col=0
+            ax[1,1].scatter(T_X[-1], T_Z[-1], c='#ff0000', s=3) #row=0, col=0
 
-            points = ax[1,1].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
-            #ax[0,1].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
-            ax[1,0].bar(i, len(good_img_landmarks1), color="#000000")
+            points = ax[1,1].scatter(good_img_landmarks[:,0],good_img_landmarks[:,2],c='#000000', s=1) #row=1, col=1
+            #ax[0,1].scatter(good_img_landmarks[:,0],good_img_landmarks[:,2],c='#000000', s=1) #row=1, col=1
+            ax[1,0].bar(i, len(good_img_landmarks), color="#000000")
             ax[0,0].imshow(output_image2)
             xmin = min(T_X[-20:])-self.config["plot_x_scale"][0]
             xmax = max(T_X[-20:])+self.config["plot_x_scale"][1]
-            ymin = min(T_Y[-20:])-self.config["plot_y_scale"][0]
-            ymax = max(T_Y[-20:])+self.config["plot_y_scale"][1]
+            ymin = min(T_Z[-20:])-self.config["plot_y_scale"][0]
+            ymax = max(T_Z[-20:])+self.config["plot_y_scale"][1]
             if(i>21):
                 ax[1,1].axis(xmin=xmin, xmax = xmax, ymin=ymin, ymax=ymax)
                 ax[1,0].axis(xmin=i-20, xmax= i)
@@ -350,4 +350,4 @@ class Continuous:
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
 
         plt.show()
-        # self.h.generate_trajectory(list(zip(T_X, T_Y)))
+        # self.h.generate_trajectory(list(zip(T_X, T_Z)))
