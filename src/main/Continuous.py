@@ -332,10 +332,10 @@ class Continuous:
             #ax[0,1].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
             ax[1,0].bar(i, len(good_img_landmarks1), color="#000000")
             ax[0,0].imshow(output_image2)
-            xmin = min(T_X[-20:]) - self.config["plot_x_scale"][0]
-            xmax = max(T_X[-20:]) +self.config["plot_x_scale"][1]
-            ymin = min(T_Y[-20:])- self.config["plot_y_scale"][0]
-            ymax = max(T_Y[-20:])+self.config["plot_x_scale"][1]
+            xmin = min(T_X[-20:])-self.config["plot_x_scale"][0]
+            xmax = max(T_X[-20:])+self.config["plot_x_scale"][1]
+            ymin = min(T_Y[-20:])-self.config["plot_y_scale"][0]
+            ymax = max(T_Y[-20:])+self.config["plot_y_scale"][1]
             if(i>21):
                 ax[1,1].axis(xmin=xmin, xmax = xmax, ymin=ymin, ymax=ymax)
                 ax[1,0].axis(xmin=i-20, xmax= i)

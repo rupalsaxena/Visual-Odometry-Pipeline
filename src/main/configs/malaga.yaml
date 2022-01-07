@@ -28,5 +28,5 @@ config:
       COUNT: 0.03
     angle_threshold: 5 
     remove_similar: False # boolean value
-    plot_x_scale: [-50, 50]
-    plot_y_scale: [0, 200]
+    plot_x_scale: [1000, 50] # this will stretch x to 100 more in left and 100 more to the right
+    plot_y_scale: [20, 400] # this will stretch y to 20 more to the bottom and 1000 to the top
