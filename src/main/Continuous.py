@@ -23,21 +23,18 @@ class Continuous:
     def run(self):
         T_X = [self.init_T[0][0]]
         T_Y = [self.init_T[2][0]]
-        # print(len(self.images))
 
-        fig, ax = plt.subplots(1,3)
-        # ax[0].ylim((self.config["plot_y_scale"][0],self.config["plot_y_scale"][1]))
+        fig, ax = plt.subplots(2,2)
 
         p0 = self.h.Point2DListToInt(self.init_keypoints)
         p0 = np.float32(p0.reshape(-1, 1, 2))
 
         good_img_landmarks1 = self.init_landmarks
-
-        ax[2].axis(xmin=T_X[-1]-2, xmax=T_X[-1]+2, ymin=T_Y[-1]-2, ymax=T_Y[-1]+2)
+        ax[1,1].axis(xmin=T_X[-1]-2, xmax=T_X[-1]+2, ymin=T_Y[-1]-2, ymax=T_Y[-1]+2)
 
         for i in range(0, min(len(self.images),100000)):
+            ax[0,1].axis(xmin=min(T_X) - 1, xmax=max(T_X) + 1, ymin =min(T_Y) - 1, ymax=max(T_Y) + 1)
 
-            ax[0].axis(xmin=min(T_X) - 1, xmax=max(T_X) + 1, ymin =min(T_Y) - 1, ymax=max(T_Y) + 1)
             if i<=self.baseline[1]:
                 continue
             
@@ -73,9 +70,6 @@ class Continuous:
                     tvec[1] = 1
                 if tvec[1] < -1:
                     tvec[1] = -1    
-                
-                # print(i)
-                # print(len(good_img_landmarks1))
 
                 T_X.append(tvec[0])
                 T_Y.append(tvec[2])
@@ -295,7 +289,6 @@ class Continuous:
                     if (t_cam[2] > 0 ):    
                         good_img_keypoints2 = np.vstack([good_img_keypoints2,candidate_kpts[idx,:]])
                         good_img_landmarks1 = np.vstack([good_img_landmarks1,(points3D[0:3]).T]) 
-                        # plt.scatter(points3D[0],points3D[2],c='#000000', s=1)
 
                 candidate_kpts = np.delete(candidate_kpts,index[0],axis = 0)
                 rvec_candidate = np.delete(rvec_candidate,index[0],axis = 0)
@@ -324,41 +317,34 @@ class Continuous:
 
                     good_img_keypoints2 = np.array(temp_good_img_keypoints2)
                     good_img_landmarks1 = np.array(temp_good_img_landmarks1)
-                
-                # cutoff = min(120,good_img_keypoints2.shape[0])
-                # good_img_keypoints2 = good_img_keypoints2[0:cutoff]
-                # good_img_landmarks1 = good_img_landmarks1[0:cutoff]
 
             p0 = good_img_keypoints2.reshape(-1,1,2) # P as per problem statement
-            # print(tvec)
-            # print(T_X[-1], T_Y[-1])
-            # plots candidate keypoints on left side and good keypoints in right side
             candidate_kpts_obj = self.h.kpts2kpts2Object(candidate_kpts)
-            output_image1 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), candidate_kpts_obj, 0, (0,255,255))
+            output_image1 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), candidate_kpts_obj, 0, (255,0,0))
 
             good_img_kpts_obj = self.h.kpts2kpts2Object(good_img_keypoints2)
-            output_image2 = cv2.drawKeypoints(cv2.cvtColor(self.images[i], cv2.COLOR_GRAY2BGR), good_img_kpts_obj, 0, (0,255,0))
+            output_image2 = cv2.drawKeypoints(output_image1, good_img_kpts_obj, 0, (0,255,0))
 
-            horizontal_concat = np.concatenate((output_image1, output_image2), axis=1)
-            cv2.imshow('left_are_candidate_kpts right_are_current_kpts', horizontal_concat)
+            ax[0,1].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
+            ax[1,1].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
 
-            ax[0].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
-            ax[2].scatter(T_X[-1], T_Y[-1], c='#ff0000', s=3) #row=0, col=0
+            points = ax[1,1].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
+            #ax[0,1].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
+            ax[1,0].bar(i, len(good_img_landmarks1), color="#000000")
+            ax[0,0].imshow(output_image2)
+            xmin = min(T_X[-20:]) - self.config["plot_x_scale"][0]
+            xmax = max(T_X[-20:]) +self.config["plot_x_scale"][1]
+            ymin = min(T_Y[-20:])- self.config["plot_y_scale"][0]
+            ymax = max(T_Y[-20:])+self.config["plot_x_scale"][1]
+            if(i>21):
+                ax[1,1].axis(xmin=xmin, xmax = xmax, ymin=ymin, ymax=ymax)
+                ax[1,0].axis(xmin=i-20, xmax= i)
 
-            points = ax[2].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
+            ax[0,0].set_title("Image")
+            ax[0,1].set_title("Full trajectory", fontsize=7)
+            ax[1,0].set_title("Num of kpts detected", fontsize=7)
+            ax[1,1].set_title("Trajectory of last 20 frames", fontsize=7)
 
-            ax[0].scatter(good_img_landmarks1[:,0],good_img_landmarks1[:,2],c='#000000', s=1) #row=1, col=1
-            ax[1].bar(i, len(good_img_landmarks1), color="#000000")
-            if(i>25):
-                ax[2].axis(xmin=min(T_X[-20:]) - 2, xmax = max(T_X[-20:]) +2, ymin=min(T_Y[-20:])-2, ymax=max(T_Y[-20:])+2)
-                #ax[2].axis(xmin=min(good_img_landmarks1[:,0])-2, xmax=max(good_img_landmarks1[:,0])+2, ymin=min(good_img_landmarks1[:,2])-2, ymax=max(good_img_landmarks1[:,2])+2)
-                ax[1].axis(xmin=i-20, xmax= i)
-
-            ax[0].set_title("Full trajectory", fontsize=7)
-            ax[1].set_title("Num of kpts detected", fontsize=7)
-            ax[2].set_title("Trajectory of last 20 frames", fontsize=7)
-
-            cv2.waitKey(1)
             plt.pause(0.05)
             points.remove()
             candidate_kpts = candidate_kpts.reshape(-1,1,2)
