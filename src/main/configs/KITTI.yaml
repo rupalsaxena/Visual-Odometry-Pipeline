@@ -28,5 +28,5 @@ config:
       COUNT: 0.03
     angle_threshold: 1
     remove_similar: False # boolean value
-    plot_x_scale: [-50, 50]
-    plot_y_scale: [-50, 50]
+    plot_x_scale: [10, 10]
+    plot_y_scale: [0, 2]
